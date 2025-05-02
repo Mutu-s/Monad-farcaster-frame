@@ -1,9 +1,45 @@
 "use client"
 
-import { useAppKitAccount } from "./AppKitProvider"
+import { useState } from "react"
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
+import { monadTestnet } from "wagmi/chains"
+import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
 
-export function AppKitButton() {
-  const { isConnected, address, connect, disconnect, isPending, isCorrectNetwork, switchToMonad } = useAppKitAccount()
+interface AppKitButtonProps {
+  onConnect?: () => void
+}
+
+export function AppKitButton({ onConnect }: AppKitButtonProps) {
+  const { isConnected, address, chainId } = useAccount()
+  const { connect, isPending: isConnectPending } = useConnect()
+  const { disconnect } = useDisconnect()
+  const { switchChain, isPending: isSwitchPending } = useSwitchChain()
+  const [error, setError] = useState<string | null>(null)
+  const isPending = isConnectPending || isSwitchPending
+  const isCorrectNetwork = chainId === monadTestnet.id
+
+  // Monad ağına geçiş
+  const switchToMonad = async () => {
+    try {
+      setError(null)
+      await switchChain({ chainId: monadTestnet.id })
+    } catch (err) {
+      console.error("Ağ değiştirme hatası:", err)
+      setError("Ağ değiştirilemedi. Lütfen manuel olarak Monad Test Ağına geçiş yapın.")
+    }
+  }
+
+  // Cüzdana bağlanma
+  const handleConnect = async () => {
+    try {
+      setError(null)
+      await connect({ connector: farcasterFrame() })
+      if (onConnect) onConnect()
+    } catch (err) {
+      console.error("Bağlantı hatası:", err)
+      setError("Cüzdana bağlanırken bir hata oluştu. Lütfen tekrar deneyin.")
+    }
+  }
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -15,26 +51,32 @@ export function AppKitButton() {
           {!isCorrectNetwork && (
             <button
               onClick={switchToMonad}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md transition-colors mb-2"
+              disabled={isPending}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md transition-colors mb-2 disabled:opacity-50"
             >
-              Switch to Monad Network
+              {isPending ? "İşlem yapılıyor..." : "Monad Ağına Geç"}
             </button>
           )}
           <button
-            onClick={disconnect}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            onClick={() => disconnect()}
+            disabled={isPending}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
           >
-            Disconnect
+            {isPending ? "İşlem yapılıyor..." : "Bağlantıyı Kes"}
           </button>
         </div>
       ) : (
         <button
-          onClick={connect}
+          onClick={handleConnect}
           disabled={isPending}
           className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
         >
-          {isPending ? "Connecting..." : "Connect Wallet"}
+          {isPending ? "Bağlanıyor..." : "Cüzdana Bağlan"}
         </button>
+      )}
+
+      {error && (
+        <div className="text-red-500 text-sm bg-red-500/10 p-2 rounded-md border border-red-500/30">{error}</div>
       )}
     </div>
   )
