@@ -12,7 +12,21 @@ export function useMobile() {
       const checkMobile = () => {
         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
         const mobileRegex = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i
-        setIsMobile(mobileRegex.test(userAgent.toLowerCase()))
+
+        // Check if it's a mobile device based on user agent
+        const isMobileDevice = mobileRegex.test(userAgent.toLowerCase())
+
+        // Also check screen width as a fallback
+        const isMobileWidth = window.innerWidth <= 768
+
+        setIsMobile(isMobileDevice || isMobileWidth)
+
+        console.log("Mobile detection:", {
+          isMobileDevice,
+          isMobileWidth,
+          userAgent,
+          finalResult: isMobileDevice || isMobileWidth,
+        })
       }
 
       // Check immediately

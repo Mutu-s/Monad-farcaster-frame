@@ -5,7 +5,9 @@ import { createContext, useContext, useState, useEffect } from "react"
 import { createConfig, http, WagmiConfig, useAccount, useConnect, useDisconnect } from "wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { injected, walletConnect } from "wagmi/connectors"
+import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
 import useMobile from "@/hooks/use-mobile"
+import { sdk } from "@farcaster/frame-sdk"
 
 // Define Monad Testnet chain with the correct information
 const monadTestnet = {
@@ -39,6 +41,7 @@ const config = createConfig({
     [monadTestnet.id]: http(),
   },
   connectors: [
+    farcasterFrame(),
     injected(),
     walletConnect({
       projectId,
@@ -77,6 +80,11 @@ function AppKitContextProvider({ children }: { children: React.ReactNode }) {
   const [isSwitchPending, setIsSwitchPending] = useState(false)
   const [networkSwitchError, setNetworkSwitchError] = useState<string | null>(null)
   const { isMobile } = useMobile()
+
+  // Notify Frame SDK that we're ready
+  useEffect(() => {
+    sdk.actions.ready()
+  }, [])
 
   // Check if connected to the correct network using chainId from useAccount
   useEffect(() => {

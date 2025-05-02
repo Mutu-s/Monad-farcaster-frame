@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -12,16 +13,15 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/.well-known/:path*',
+        source: "/.well-known/:path*",
         headers: [
-          {
-            key: 'Content-Type',
-            value: 'text/plain',
-          },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type" },
         ],
       },
-    ];
+    ]
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
