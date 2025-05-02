@@ -1,86 +1,213 @@
 "use client"
 
-import { createConfig, http, WagmiProvider } from "wagmi"
+import type React from "react"
+import { createContext, useContext, useState, useEffect } from "react"
+import { createConfig, http, WagmiConfig, useAccount, useConnect, useDisconnect } from "wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { monadTestnet } from "wagmi/chains"
-import { type ReactNode, useEffect, useState } from "react"
-import { useMobile } from "@/hooks/use-mobile"
-import { sdk } from "@farcaster/frame-sdk"
-import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
+import { injected } from "wagmi/connectors"
 
-// WalletConnect proje kimliği
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""
+// Define Monad Testnet chain with the correct information
+const monadTestnet = {
+  id: 10143, // Monad Testnet Chain ID
+  name: "Monad Testnet",
+  network: "monad-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Monad",
+    symbol: "MON",
+  },
+  rpcUrls: {
+    public: { http: ["https://testnet-rpc.monad.xyz"] },
+    default: { http: ["https://testnet-rpc.monad.xyz"] },
+  },
+  blockExplorers: {
+    default: { name: "Monad Explorer", url: "https://testnet.monadexplorer.com" },
+  },
+}
 
-// Wagmi yapılandırması
+// Create a query client for React Query
+const queryClient = new QueryClient()
+
+// Create a proper wagmi configuration with ONLY Monad Testnet
 const config = createConfig({
-  chains: [monadTestnet],
+  chains: [monadTestnet], // Only include Monad chain
   transports: {
     [monadTestnet.id]: http(),
   },
-  connectors: [farcasterFrame()],
+  connectors: [injected()],
+  ssr: true,
 })
 
-// React Query istemcisi
-const queryClient = new QueryClient()
+interface AppKitContextType {
+  isConnected: boolean
+  address: string | undefined
+  connect: () => Promise<void>
+  disconnect: () => void
+  isPending: boolean
+  isCorrectNetwork: boolean
+  switchToMonad: () => Promise<void>
+  addMonadNetwork: () => Promise<void>
+  networkSwitchError: string | null
+}
 
-// AppKitProvider bileşeni
-function AppKitProvider({ children }: { children: ReactNode }) {
-  const { isMobile } = useMobile()
-  const [isFarcasterWallet, setIsFarcasterWallet] = useState(false)
+const AppKitContext = createContext<AppKitContextType | undefined>(undefined)
 
-  // Farcaster cüzdan tespiti
+function AppKitContextProvider({ children }: { children: React.ReactNode }) {
+  const { address, isConnected, chainId } = useAccount()
+  const { connect: wagmiConnect } = useConnect()
+  const { disconnect: wagmiDisconnect } = useDisconnect()
+  const [isPending, setIsPending] = useState(false)
+  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false)
+  const [isSwitchPending, setIsSwitchPending] = useState(false)
+  const [networkSwitchError, setNetworkSwitchError] = useState<string | null>(null)
+
+  // Check if connected to the correct network using chainId from useAccount
   useEffect(() => {
-    const checkFarcasterWallet = async () => {
-      try {
-        if (typeof window !== "undefined") {
-          // Farcaster Frame SDK'dan cüzdan bilgisini kontrol et
-          const isFrameContext = await sdk.isFrameContext()
-          if (isFrameContext) {
-            const ethProvider = await sdk.wallet.ethProvider()
-            if (ethProvider) {
-              console.log("Farcaster wallet detected")
-              setIsFarcasterWallet(true)
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error checking Farcaster wallet:", error)
-      }
+    if (isConnected && chainId) {
+      setIsCorrectNetwork(chainId === monadTestnet.id)
+      console.log("Current chainId:", chainId, "Expected chainId:", monadTestnet.id)
+    } else {
+      setIsCorrectNetwork(false)
+    }
+  }, [isConnected, chainId])
+
+  // Function to add Monad network to MetaMask
+  const addMonadNetwork = async () => {
+    if (!window.ethereum) {
+      const errorMsg = "MetaMask is not installed"
+      console.error(errorMsg)
+      setNetworkSwitchError(errorMsg)
+      return
     }
 
-    checkFarcasterWallet()
-  }, [])
+    setIsSwitchPending(true)
+    setNetworkSwitchError(null)
 
+    try {
+      console.log("Adding Monad network to MetaMask...")
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: `0x${monadTestnet.id.toString(16)}`,
+            chainName: monadTestnet.name,
+            nativeCurrency: monadTestnet.nativeCurrency,
+            rpcUrls: monadTestnet.rpcUrls.default.http,
+            blockExplorerUrls: [monadTestnet.blockExplorers.default.url],
+          },
+        ],
+      })
+      console.log("Monad network added successfully")
+    } catch (error: any) {
+      const errorMsg = `Failed to add Monad network: ${error.message || "Unknown error"}`
+      console.error(errorMsg, error)
+      setNetworkSwitchError(errorMsg)
+    } finally {
+      setIsSwitchPending(false)
+    }
+  }
+
+  // Function to switch to Monad network using window.ethereum directly
+  const switchToMonad = async () => {
+    if (!window.ethereum) {
+      const errorMsg = "MetaMask is not installed"
+      console.error(errorMsg)
+      setNetworkSwitchError(errorMsg)
+      return
+    }
+
+    setIsSwitchPending(true)
+    setNetworkSwitchError(null)
+
+    try {
+      // Format chainId as hex string with 0x prefix
+      const chainIdHex = `0x${monadTestnet.id.toString(16)}`
+      console.log("Switching to Monad network with chainId:", chainIdHex)
+
+      // Try to switch to the Monad network
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: chainIdHex }],
+      })
+      console.log("Successfully switched to Monad network")
+    } catch (switchError: any) {
+      console.error("Error switching network:", switchError)
+
+      // This error code indicates that the chain has not been added to MetaMask
+      if (switchError.code === 4902) {
+        console.log("Network not found, attempting to add it...")
+        try {
+          await addMonadNetwork()
+        } catch (addError: any) {
+          const errorMsg = `Failed to add network: ${addError.message || "Unknown error"}`
+          console.error(errorMsg, addError)
+          setNetworkSwitchError(errorMsg)
+        }
+      } else {
+        const errorMsg = `Failed to switch network: ${switchError.message || "Unknown error"}`
+        console.error(errorMsg)
+        setNetworkSwitchError(errorMsg)
+      }
+    } finally {
+      setIsSwitchPending(false)
+    }
+  }
+
+  const connect = async () => {
+    setIsPending(true)
+    setNetworkSwitchError(null)
+    try {
+      // Connect to wallet
+      console.log("Connecting to wallet...")
+      await wagmiConnect({ connector: injected() })
+      console.log("Wallet connected successfully")
+
+      // After connecting, ensure we're on the Monad network
+      setTimeout(async () => {
+        await switchToMonad()
+      }, 500)
+    } catch (error: any) {
+      const errorMsg = `Error connecting wallet: ${error.message || "Unknown error"}`
+      console.error(errorMsg, error)
+      setNetworkSwitchError(errorMsg)
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  const disconnect = () => {
+    wagmiDisconnect()
+  }
+
+  const value: AppKitContextType = {
+    isConnected,
+    address,
+    connect,
+    disconnect,
+    isPending: isPending || isSwitchPending,
+    isCorrectNetwork,
+    switchToMonad,
+    addMonadNetwork,
+    networkSwitchError,
+  }
+
+  return <AppKitContext.Provider value={value}>{children}</AppKitContext.Provider>
+}
+
+export default function AppKitProvider({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={config}>
+    <WagmiConfig config={config}>
       <QueryClientProvider client={queryClient}>
-        {isFarcasterWallet && (
-          <div className="bg-purple-900/20 text-white p-2 text-sm rounded-md mb-4 text-center">
-            Warpcast cüzdanı tespit edildi. Warpcast cüzdanınızla işlem yapabilirsiniz.
-          </div>
-        )}
-        {children}
+        <AppKitContextProvider>{children}</AppKitContextProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </WagmiConfig>
   )
 }
 
-// useAppKitAccount hook'u
 export function useAppKitAccount() {
-  const [state, setState] = useState({
-    isConnected: false,
-    address: "",
-    isPending: false,
-    isCorrectNetwork: false,
-    networkSwitchError: "",
-    connect: () => {},
-    disconnect: () => {},
-    switchToMonad: async () => {},
-    addMonadNetwork: async () => {},
-  })
-
-  return state
+  const context = useContext(AppKitContext)
+  if (!context) {
+    throw new Error("useAppKitAccount must be used within a AppKitProvider")
+  }
+  return context
 }
-
-// Varsayılan dışa aktarım olarak AppKitProvider'ı ekleyelim
-export default AppKitProvider
