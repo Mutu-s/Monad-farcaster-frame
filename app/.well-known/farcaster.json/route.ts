@@ -6,12 +6,11 @@ export async function GET() {
 
   return NextResponse.json({
     accountAssociation: {
-      // Bu kısmı Warpcast Mini App Manifest Tool'dan alacağınız gerçek değerlerle değiştirmeniz gerekecek
       header:
-        "eyJmaWQiOjkxNTIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgwMmVmNzkwRGQ3OTkzQTM1ZkQ4NDdDMDUzRURkQUU5NDBEMDU1NTk2In0",
-      payload: `eyJkb21haW4iOiIke2RvbWFpbn0ifQ`,
+        "eyJmaWQiOjQ1MzY4NSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDJFOEY1NDE0NDcwZTNiZGZCODI4NTZkNkNiYjM2Q2I4QjY4OThENDAifQ",
+      payload: "eyJkb21haW4iOiJidGNnYW1lLW1vbmFkLnZlcmNlbC5hcHAifQ",
       signature:
-        "MHgxMGQwZGU4ZGYwZDUwZTdmMGIxN2YxMTU2NDI1MjRmZTY0MTUyZGU4ZGU1MWU0MThhYjU4ZjVmZmQxYjRjNDBiNGVlZTRhNDcwNmVmNjhlMzQ0ZGQ5MDBkYmQyMmNlMmVlZGY5ZGQ0N2JlNWRmNzMwYzUxNjE4OWVjZDJjY2Y0MDFj",
+        "MHgxYTQ1Zjg5NDYzNzczOTE0MDNiMDQ1NmUwMTNlY2ExZGMyYTE4OGMwM2ZkNjUwOTA3Nzg4MWYwODVhYWZkNjdjNGJiYjI1MTA0NmQ0ODM1OWJjZjUyY2M5ZDk2ZmI1MDI4NzViMTI5MjA3NTA4ODg3MDQyYjY0NTkzMzVjYTQ0YjFi",
     },
     frame: {
       version: "1",
