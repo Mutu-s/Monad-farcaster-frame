@@ -20,7 +20,7 @@ export async function GET() {
       homeUrl: baseUrl,
       splashImageUrl: `${baseUrl}/images/splash-image.png`,
       splashBackgroundColor: "#FF9500", // Turuncu tema
-      subtitle: "Predict Bitcoin prices and win rewards",
+      subtitle: "Predict BTC prices & win rewards",
       description:
         "Make your Bitcoin price predictions and earn MON tokens for correct guesses. Join the competition now!",
       screenshotUrls: [
@@ -31,7 +31,7 @@ export async function GET() {
       primaryCategory: "finance",
       tags: ["bitcoin", "prediction", "crypto", "rewards", "monad"],
       heroImageUrl: `${baseUrl}/images/feed-image.png`,
-      tagline: "Predict & Win",
+      tagline: "Predict and Win",
       ogTitle: "Bitcoin Price Prediction",
       ogDescription: "Make your Bitcoin price predictions and earn MON tokens for correct guesses.",
       ogImageUrl: `${baseUrl}/images/feed-image.png`,
