@@ -8,12 +8,13 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-8 bg-black">
       <div className="w-full max-w-3xl mx-auto">
+        {/* Mobile Wallet Connector - Moved to top for better visibility */}
         <div className="mb-8">
-          <BitcoinPrediction />
+          <MobileWalletConnector />
         </div>
 
-        <div className="mb-4">
-          <MobileWalletConnector />
+        <div className="mb-8">
+          <BitcoinPrediction />
         </div>
 
         <Tabs defaultValue="predict" className="w-full">

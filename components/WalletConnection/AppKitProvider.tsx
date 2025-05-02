@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import { createConfig, http, WagmiConfig, useAccount, useConnect, useDisconnect } from "wagmi"
+import { createConfig, http, WagmiConfig, useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { injected, walletConnect } from "wagmi/connectors"
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
@@ -67,23 +67,42 @@ interface AppKitContextType {
   switchToMonad: () => Promise<void>
   addMonadNetwork: () => Promise<void>
   networkSwitchError: string | null
+  isWarpcastWallet: boolean
 }
 
 const AppKitContext = createContext<AppKitContextType | undefined>(undefined)
 
 function AppKitContextProvider({ children }: { children: React.ReactNode }) {
-  const { address, isConnected, chainId } = useAccount()
-  const { connect: wagmiConnect, connectors } = useConnect()
+  const { address, isConnected, chainId, connector } = useAccount()
+  const { connect: wagmiConnect, connectors, isPending: isConnectPending } = useConnect()
   const { disconnect: wagmiDisconnect } = useDisconnect()
+  const { switchChain, isPending: isSwitchPending, error: switchChainError } = useSwitchChain()
   const [isPending, setIsPending] = useState(false)
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false)
-  const [isSwitchPending, setIsSwitchPending] = useState(false)
   const [networkSwitchError, setNetworkSwitchError] = useState<string | null>(null)
   const { isMobile } = useMobile()
+  const [isWarpcastWallet, setIsWarpcastWallet] = useState(false)
 
-  // Notify Frame SDK that we're ready
+  // Notify Frame SDK that we're ready and check for Warpcast wallet
   useEffect(() => {
+    // Notify Frame SDK that we're ready
     sdk.actions.ready()
+
+    // Check if we're using Warpcast wallet
+    const checkWarpcastWallet = async () => {
+      try {
+        const ethProvider = sdk.wallet.ethProvider
+        if (ethProvider) {
+          console.log("Warpcast wallet detected")
+          setIsWarpcastWallet(true)
+        }
+      } catch (error) {
+        console.log("Not using Warpcast wallet", error)
+        setIsWarpcastWallet(false)
+      }
+    }
+
+    checkWarpcastWallet()
   }, [])
 
   // Check if connected to the correct network using chainId from useAccount
@@ -105,7 +124,6 @@ function AppKitContextProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    setIsSwitchPending(true)
     setNetworkSwitchError(null)
 
     try {
@@ -127,62 +145,83 @@ function AppKitContextProvider({ children }: { children: React.ReactNode }) {
       const errorMsg = `Failed to add Monad network: ${error.message || "Unknown error"}`
       console.error(errorMsg, error)
       setNetworkSwitchError(errorMsg)
-    } finally {
-      setIsSwitchPending(false)
     }
   }
 
-  // Function to switch to Monad network using window.ethereum directly
+  // Function to switch to Monad network using wagmi's useSwitchChain
   const switchToMonad = async () => {
-    if (!window.ethereum) {
-      const errorMsg = "MetaMask is not installed"
-      console.error(errorMsg)
-      setNetworkSwitchError(errorMsg)
-      return
-    }
-
-    setIsSwitchPending(true)
     setNetworkSwitchError(null)
 
     try {
-      // Format chainId as hex string with 0x prefix
-      const chainIdHex = `0x${monadTestnet.id.toString(16)}`
-      console.log("Switching to Monad network with chainId:", chainIdHex)
+      console.log("Switching to Monad network...")
 
-      // Try to switch to the Monad network
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: chainIdHex }],
-      })
+      // Use wagmi's switchChain for better mobile compatibility
+      await switchChain({ chainId: monadTestnet.id })
+
       console.log("Successfully switched to Monad network")
-    } catch (switchError: any) {
-      console.error("Error switching network:", switchError)
+    } catch (error: any) {
+      console.error("Error switching network:", error)
 
-      // This error code indicates that the chain has not been added to MetaMask
-      if (switchError.code === 4902) {
-        console.log("Network not found, attempting to add it...")
+      // If we're on mobile and using WalletConnect, show a more helpful message
+      if (isMobile && connector?.id === "walletConnect") {
+        const errorMsg = "Please manually switch to Monad Testnet in your wallet app"
+        console.log(errorMsg)
+        setNetworkSwitchError(errorMsg)
+      } else if (window.ethereum) {
+        // For desktop MetaMask, try the old method as fallback
         try {
-          await addMonadNetwork()
-        } catch (addError: any) {
-          const errorMsg = `Failed to add network: ${addError.message || "Unknown error"}`
-          console.error(errorMsg, addError)
-          setNetworkSwitchError(errorMsg)
+          const chainIdHex = `0x${monadTestnet.id.toString(16)}`
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: chainIdHex }],
+          })
+        } catch (switchError: any) {
+          // This error code indicates that the chain has not been added to MetaMask
+          if (switchError.code === 4902) {
+            try {
+              await addMonadNetwork()
+            } catch (addError: any) {
+              const errorMsg = `Failed to add network: ${addError.message || "Unknown error"}`
+              setNetworkSwitchError(errorMsg)
+            }
+          } else {
+            const errorMsg = `Failed to switch network: ${switchError.message || "Unknown error"}`
+            setNetworkSwitchError(errorMsg)
+          }
         }
       } else {
-        const errorMsg = `Failed to switch network: ${switchError.message || "Unknown error"}`
-        console.error(errorMsg)
+        const errorMsg = `Failed to switch network: ${error.message || "Unknown error"}`
         setNetworkSwitchError(errorMsg)
       }
-    } finally {
-      setIsSwitchPending(false)
     }
   }
 
   const connect = async () => {
     setIsPending(true)
     setNetworkSwitchError(null)
+
     try {
-      // Connect to wallet
+      // First check if we can use Warpcast wallet
+      try {
+        const ethProvider = sdk.wallet.ethProvider
+        if (ethProvider) {
+          console.log("Using Warpcast wallet")
+          setIsWarpcastWallet(true)
+
+          // Use Farcaster Frame connector
+          const frameConnector = connectors.find((c) => c.id === "farcasterFrame")
+          if (frameConnector) {
+            await wagmiConnect({ connector: frameConnector })
+            console.log("Connected with Farcaster Frame connector")
+            setIsPending(false)
+            return
+          }
+        }
+      } catch (error) {
+        console.log("Not using Warpcast wallet, continuing with regular flow")
+      }
+
+      // Regular wallet connection flow
       console.log("Connecting to wallet...", isMobile)
 
       if (isMobile) {
@@ -202,13 +241,6 @@ function AppKitContextProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log("Wallet connected successfully")
-
-      // After connecting, ensure we're on the Monad network
-      setTimeout(async () => {
-        if (!isMobile) {
-          await switchToMonad()
-        }
-      }, 500)
     } catch (error: any) {
       const errorMsg = `Error connecting wallet: ${error.message || "Unknown error"}`
       console.error(errorMsg, error)
@@ -220,6 +252,7 @@ function AppKitContextProvider({ children }: { children: React.ReactNode }) {
 
   const disconnect = () => {
     wagmiDisconnect()
+    setIsWarpcastWallet(false)
   }
 
   const value: AppKitContextType = {
@@ -227,11 +260,12 @@ function AppKitContextProvider({ children }: { children: React.ReactNode }) {
     address,
     connect,
     disconnect,
-    isPending: isPending || isSwitchPending,
+    isPending: isPending || isConnectPending || isSwitchPending,
     isCorrectNetwork,
     switchToMonad,
     addMonadNetwork,
     networkSwitchError,
+    isWarpcastWallet,
   }
 
   return <AppKitContext.Provider value={value}>{children}</AppKitContext.Provider>
