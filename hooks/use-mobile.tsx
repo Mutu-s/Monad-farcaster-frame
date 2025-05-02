@@ -1,19 +1,43 @@
-import * as React from "react"
+"use client"
 
-const MOBILE_BREAKPOINT = 768
+import { useEffect, useState } from "react"
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+export function useMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  const [isMobileChecked, setIsMobileChecked] = useState(false)
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+  useEffect(() => {
+    // Mobil cihaz tespiti
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
+
+      // iOS tespiti
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream
+
+      // Android tespiti
+      const isAndroid = /android/i.test(userAgent)
+
+      // Genel mobil tarayıcı tespiti
+      const isMobileCheck = /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
+
+      // Ekran genişliği kontrolü
+      const isSmallScreen = window.innerWidth <= 768
+
+      setIsMobile(isIOS || isAndroid || isMobileCheck || isSmallScreen)
+      setIsMobileChecked(true)
     }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
+
+    if (typeof window !== "undefined") {
+      checkMobile()
+      window.addEventListener("resize", checkMobile)
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", checkMobile)
+      }
+    }
   }, [])
 
-  return !!isMobile
+  return { isMobile, isMobileChecked }
 }

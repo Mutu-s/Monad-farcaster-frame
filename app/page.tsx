@@ -1,35 +1,13 @@
-import type { Metadata } from "next"
-import { APP_URL } from "@/lib/constants"
-import BitcoinPredictionLoader from "@/components/BitcoinPrediction/BitcoinPredictionLoader"
+import { MobileWalletConnector } from "@/components/WalletConnection/MobileWalletConnector"
+import { Home } from "@/components/Home"
 
-const frame = {
-  version: "next",
-  imageUrl: `${APP_URL}/images/feed-image.png`,
-  button: {
-    title: "Make Prediction",
-    action: {
-      type: "launch_frame",
-      name: "Bitcoin Price Prediction by mutu",
-      url: APP_URL,
-      splashImageUrl: `${APP_URL}/images/splash-image.png`,
-      splashBackgroundColor: "#FF9500", // Updated to match orange theme
-    },
-  },
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Bitcoin Price Prediction by mutu",
-    openGraph: {
-      title: "Bitcoin Price Prediction by mutu",
-      description: "Predict the future price of Bitcoin and win rewards if you're right!",
-    },
-    other: {
-      "fc:frame": JSON.stringify(frame),
-    },
-  }
-}
-
-export default function Home() {
-  return <BitcoinPredictionLoader />
+export default function Page() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-24">
+      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm">
+        <MobileWalletConnector />
+        <Home />
+      </div>
+    </main>
+  )
 }
