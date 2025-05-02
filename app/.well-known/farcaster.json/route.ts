@@ -20,7 +20,7 @@ export async function GET() {
       homeUrl: baseUrl,
       splashImageUrl: `${baseUrl}/images/splash-image.png`,
       splashBackgroundColor: "#FF9500", // Turuncu tema
-      subtitle: "Predict BTC prices & win rewards",
+      subtitle: "Predict BTC prices and win",
       description:
         "Make your Bitcoin price predictions and earn MON tokens for correct guesses. Join the competition now!",
       screenshotUrls: [
