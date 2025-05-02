@@ -4,7 +4,8 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { createConfig, http, WagmiConfig, useAccount, useConnect, useDisconnect } from "wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { injected } from "wagmi/connectors"
+import { injected, walletConnect } from "wagmi/connectors"
+import useMobile from "@/hooks/use-mobile"
 
 // Define Monad Testnet chain with the correct information
 const monadTestnet = {
@@ -25,6 +26,9 @@ const monadTestnet = {
   },
 }
 
+// Get WalletConnect Project ID from environment variable
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "8541facf06433952d3f80698e20d5663"
+
 // Create a query client for React Query
 const queryClient = new QueryClient()
 
@@ -34,7 +38,19 @@ const config = createConfig({
   transports: {
     [monadTestnet.id]: http(),
   },
-  connectors: [injected()],
+  connectors: [
+    injected(),
+    walletConnect({
+      projectId,
+      showQrModal: true,
+      metadata: {
+        name: "Bitcoin Price Prediction",
+        description: "Predict Bitcoin prices and earn MON tokens for correct guesses",
+        url: "https://monad.0xhub.xyz",
+        icons: ["https://monad.0xhub.xyz/images/mutu-logo-new.png"],
+      },
+    }),
+  ],
   ssr: true,
 })
 
@@ -54,12 +70,13 @@ const AppKitContext = createContext<AppKitContextType | undefined>(undefined)
 
 function AppKitContextProvider({ children }: { children: React.ReactNode }) {
   const { address, isConnected, chainId } = useAccount()
-  const { connect: wagmiConnect } = useConnect()
+  const { connect: wagmiConnect, connectors } = useConnect()
   const { disconnect: wagmiDisconnect } = useDisconnect()
   const [isPending, setIsPending] = useState(false)
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false)
   const [isSwitchPending, setIsSwitchPending] = useState(false)
   const [networkSwitchError, setNetworkSwitchError] = useState<string | null>(null)
+  const { isMobile } = useMobile()
 
   // Check if connected to the correct network using chainId from useAccount
   useEffect(() => {
@@ -158,13 +175,31 @@ function AppKitContextProvider({ children }: { children: React.ReactNode }) {
     setNetworkSwitchError(null)
     try {
       // Connect to wallet
-      console.log("Connecting to wallet...")
-      await wagmiConnect({ connector: injected() })
+      console.log("Connecting to wallet...", isMobile)
+
+      if (isMobile) {
+        // On mobile, prefer WalletConnect
+        const wcConnector = connectors.find((c) => c.id === "walletConnect")
+        if (wcConnector) {
+          console.log("Using WalletConnect for mobile")
+          await wagmiConnect({ connector: wcConnector })
+        } else {
+          console.log("WalletConnect not found, using injected")
+          await wagmiConnect({ connector: injected() })
+        }
+      } else {
+        // On desktop, use injected (MetaMask)
+        console.log("Using injected connector for desktop")
+        await wagmiConnect({ connector: injected() })
+      }
+
       console.log("Wallet connected successfully")
 
       // After connecting, ensure we're on the Monad network
       setTimeout(async () => {
-        await switchToMonad()
+        if (!isMobile) {
+          await switchToMonad()
+        }
       }, 500)
     } catch (error: any) {
       const errorMsg = `Error connecting wallet: ${error.message || "Unknown error"}`
