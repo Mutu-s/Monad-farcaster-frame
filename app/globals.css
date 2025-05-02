@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 36 100% 97%;
+  --foreground: 20 10% 10%;
+
+  --card: 36 100% 98%;
+  --card-foreground: 20 10% 10%;
+
+  --popover: 36 100% 98%;
+  --popover-foreground: 20 10% 10%;
+
+  --primary: 24 95% 53%;
+  --primary-foreground: 60 9.1% 97.8%;
+
+  --secondary: 30 100% 94%;
+  --secondary-foreground: 24 40% 30%;
+
+  --muted: 30 10% 92%;
+  --muted-foreground: 25 5.3% 44.7%;
+
+  --accent: 30 100% 94%;
+  --accent-foreground: 24 40% 30%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+
+  --border: 30 10% 90%;
+  --input: 30 10% 90%;
+  --ring: 24 95% 53%;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 20 36% 10%;
+  --foreground: 60 9.1% 97.8%;
+
+  --card: 20 30% 15%;
+  --card-foreground: 60 9.1% 97.8%;
+
+  --popover: 20 30% 15%;
+  --popover-foreground: 60 9.1% 97.8%;
+
+  --primary: 24 95% 53%;
+  --primary-foreground: 60 9.1% 97.8%;
+
+  --secondary: 24 30% 20%;
+  --secondary-foreground: 60 9.1% 97.8%;
+
+  --muted: 24 30% 20%;
+  --muted-foreground: 24 5% 64.9%;
+
+  --accent: 24 30% 20%;
+  --accent-foreground: 60 9.1% 97.8%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 60 9.1% 97.8%;
+
+  --border: 24 30% 25%;
+  --input: 24 30% 25%;
+  --ring: 24 95% 53%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.glass-card {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 126, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #ff7e00, #ffb700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: bold;
+}
+
+.animated-bg {
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.button-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.button-glow::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 126, 0, 0.3) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.button-glow:hover::before {
+  opacity: 1;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
