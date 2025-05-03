@@ -11,7 +11,7 @@ interface AppKitButtonProps {
 
 export function AppKitButton({ onConnect }: AppKitButtonProps) {
   const { isConnected, address, chainId } = useAccount()
-  const { connect, isPending: isConnectPending } = useConnect()
+  const { connect, isPending: isConnectPending, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   const { switchChain, isPending: isSwitchPending } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
@@ -33,7 +33,16 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
   const handleConnect = async () => {
     try {
       setError(null)
-      await connect({ connector: farcasterFrame() })
+
+      // Önce injected connector (MetaMask) ile bağlanmayı dene
+      const injectedConnector = connectors.find((c) => c.id === "injected")
+      if (injectedConnector) {
+        await connect({ connector: injectedConnector })
+      } else {
+        // Injected connector yoksa Farcaster Frame connector ile dene
+        await connect({ connector: farcasterFrame() })
+      }
+
       if (onConnect) onConnect()
     } catch (err) {
       console.error("Bağlantı hatası:", err)

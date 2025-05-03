@@ -39,7 +39,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
 
   // Handle wallet connection
   const handleConnect = () => {
-    // The actual connection is handled by the AppKitButton component
+    // AppKitButton bileşeni bağlantıyı yönetecek
   }
 
   // Handle payment success
@@ -54,6 +54,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   const handlePayment = () => {
     if (!isConnected) return
 
+    // Regular payment before prediction
     sendTransaction({
       to: PAYMENT_ADDRESS,
       value: parseEther("0.1"),

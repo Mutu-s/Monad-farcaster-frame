@@ -10,7 +10,7 @@ import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
 export function MobileWalletConnector() {
   const { isMobile } = useMobile()
   const { isConnected, address, chainId } = useAccount()
-  const { connect, isPending: isConnectPending } = useConnect()
+  const { connect, isPending: isConnectPending, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   const { switchChain, isPending: isSwitchPending } = useSwitchChain()
   const { toast } = useToast()
@@ -48,7 +48,14 @@ export function MobileWalletConnector() {
   // Cüzdana bağlanma
   const handleConnect = async () => {
     try {
-      await connect({ connector: farcasterFrame() })
+      // Önce injected connector (MetaMask) ile bağlanmayı dene
+      const injectedConnector = connectors.find((c) => c.id === "injected")
+      if (injectedConnector) {
+        await connect({ connector: injectedConnector })
+      } else {
+        // Injected connector yoksa Farcaster Frame connector ile dene
+        await connect({ connector: farcasterFrame() })
+      }
     } catch (error) {
       console.error("Bağlantı hatası:", error)
       toast({

@@ -1,10 +1,57 @@
 "use client"
 
-import { useAppKitAccount } from "./AppKitProvider"
+import { useAccount, useSwitchChain } from "wagmi"
+import { monadTestnet } from "wagmi/chains"
+import { useState } from "react"
 
 export default function NetworkSwitcher() {
-  const { isConnected, isCorrectNetwork, switchToMonad, addMonadNetwork, isPending, networkSwitchError } =
-    useAppKitAccount()
+  const { isConnected, chainId } = useAccount()
+  const { switchChain, isPending } = useSwitchChain()
+  const [networkSwitchError, setNetworkSwitchError] = useState("")
+  const isCorrectNetwork = chainId === monadTestnet.id
+
+  const switchToMonad = async () => {
+    try {
+      setNetworkSwitchError("")
+      await switchChain({ chainId: monadTestnet.id })
+    } catch (error) {
+      console.error("Ağ değiştirme hatası:", error)
+      setNetworkSwitchError("Ağ değiştirilemedi. Lütfen manuel olarak Monad Test Ağına geçiş yapın.")
+    }
+  }
+
+  const addMonadNetwork = async () => {
+    try {
+      setNetworkSwitchError("")
+      // Ethereum provider'a erişim
+      const ethereum = (window as any).ethereum
+      if (!ethereum) {
+        setNetworkSwitchError("MetaMask veya uyumlu bir cüzdan bulunamadı.")
+        return
+      }
+
+      // Monad Testnet ağını ekle
+      await ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: `0x${monadTestnet.id.toString(16)}`,
+            chainName: "Monad Testnet",
+            nativeCurrency: {
+              name: "Monad",
+              symbol: "MON",
+              decimals: 18,
+            },
+            rpcUrls: ["https://rpc.testnet.monad.xyz/"],
+            blockExplorerUrls: ["https://testnet.monadexplorer.com/"],
+          },
+        ],
+      })
+    } catch (error) {
+      console.error("Ağ ekleme hatası:", error)
+      setNetworkSwitchError("Ağ eklenemedi. Lütfen manuel olarak Monad Test Ağını ekleyin.")
+    }
+  }
 
   if (!isConnected) {
     return null
