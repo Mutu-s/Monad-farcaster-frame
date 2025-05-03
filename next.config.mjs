@@ -8,7 +8,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["i.postimg.cc", "v0.blob.com"],
     unoptimized: true,
   },
   async headers() {
