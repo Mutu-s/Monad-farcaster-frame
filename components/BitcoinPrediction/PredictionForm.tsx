@@ -209,7 +209,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
                 fontWeight: "600",
               }}
             >
-              Bitcoin Price Prediction
+              Access Bitcoin Predictions
             </h1>
             <p
               style={{
@@ -218,7 +218,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
                 marginTop: "4px",
               }}
             >
-              Predict the future price of Bitcoin and win rewards
+              One-time payment required to unlock all features
             </p>
           </div>
         </div>
@@ -229,8 +229,8 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
 
         <div className="space-y-6">
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50] text-center">
-            <h2 className="text-2xl font-bold text-[#E9E8FF] mb-4">Prediction Fee</h2>
-            <p className="text-[#B8A8FF] mb-6">You need to pay 0.1 MON to make a Bitcoin price prediction</p>
+            <h2 className="text-2xl font-bold text-[#E9E8FF] mb-4">Unlock Full Access</h2>
+            <p className="text-[#B8A8FF] mb-6">Pay 0.1 MON to access all Bitcoin price prediction features</p>
 
             {!isConnected ? (
               <div className="w-full">
@@ -271,9 +271,31 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
                   }
                 }}
               >
-                {isPending ? "Processing..." : `Pay 0.1 MON Entry Fee`}
+                {isPending ? "Processing..." : `Pay 0.1 MON to Unlock`}
               </button>
             )}
+          </div>
+
+          <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50] text-center">
+            <h3 className="text-xl font-bold text-[#E9E8FF] mb-4">What You'll Get</h3>
+            <ul className="text-[#B8A8FF] space-y-3 text-left">
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-green-400 flex-shrink-0" />
+                Make Bitcoin price predictions for different timeframes
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-green-400 flex-shrink-0" />
+                View all community predictions
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-green-400 flex-shrink-0" />
+                See past winners and their rewards
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={16} className="text-green-400 flex-shrink-0" />
+                Compete for MON token rewards
+              </li>
+            </ul>
           </div>
 
           {isSuccess && (
@@ -291,7 +313,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             fontSize: "14px",
           }}
         >
-          Winners with correct predictions will receive rewards based on their accuracy.
+          One-time payment gives you unlimited access to all prediction features.
         </p>
       </div>
     )
