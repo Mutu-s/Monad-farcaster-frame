@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import BitcoinPrediction from "@/components/BitcoinPrediction"
+import BitcoinPrediction from "."
 import { hasAnyPaymentBeenMade } from "@/lib/payments"
 
 export default function BitcoinPredictionLoader() {
