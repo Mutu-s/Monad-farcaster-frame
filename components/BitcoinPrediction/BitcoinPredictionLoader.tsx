@@ -1,49 +1,19 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import BitcoinPrediction from "."
-import { hasAnyPaymentBeenMade, hasUserPaid } from "@/lib/payments"
-import { useAuth } from "@/context/auth-context"
-import { useMobile } from "@/hooks/use-mobile" // Mobil kontrolü için eklendi
+import { hasAnyPaymentBeenMade } from "@/lib/payments"
 
 export default function BitcoinPredictionLoader() {
   const [hasPaid, setHasPaid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth()
-  const { isMobile } = useMobile() // Mobil cihaz kontrolü
-
-  // Mobil cihazlar için görünümü web ile aynı hale getirmek için değişiklikler yapıyoruz
-  // checkPaymentStatus fonksiyonunu güncelliyoruz
-
-  const checkPaymentStatus = useCallback(() => {
-    // Ödeme durumunu kontrol et (mobil ve web için aynı mantık)
-    const paid = hasAnyPaymentBeenMade()
-    console.log("Initial payment check:", paid ? "Paid" : "Not paid")
-
-    // Kullanıcı kimliği varsa, kullanıcıya özel ödeme durumunu kontrol edelim
-    if (user && user.id) {
-      const userPaid = hasUserPaid(user.id)
-      console.log(`User ${user.id} payment check:`, userPaid ? "Paid" : "Not paid")
-
-      // Kullanıcı ödemişse veya genel ödeme yapılmışsa, ödeme durumunu true olarak ayarlayalım
-      setHasPaid(paid || userPaid)
-    } else {
-      setHasPaid(paid)
-    }
-
-    // Mobil cihazlar için ek kontrol yapmıyoruz, web ile aynı görünümü sağlamak için
-    // Böylece mobil cihazlarda da "Unlock Full Access" kısmı görünecek
-
-    setIsLoading(false)
-  }, [user])
 
   useEffect(() => {
-    checkPaymentStatus()
-
-    // Düzenli olarak ödeme durumunu kontrol et
-    const interval = setInterval(checkPaymentStatus, 2000)
-    return () => clearInterval(interval)
-  }, [checkPaymentStatus])
+    // Check if user has already paid
+    const paid = hasAnyPaymentBeenMade()
+    setHasPaid(paid)
+    setIsLoading(false)
+  }, [])
 
   if (isLoading) {
     return (

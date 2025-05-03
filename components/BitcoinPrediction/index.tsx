@@ -12,8 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ExternalLink, Bitcoin, TrendingUp, Award, Users } from "lucide-react"
 import RewardInfo from "./RewardInfo"
 import { useAuth } from "@/context/auth-context"
-import { hasAnyPaymentBeenMade, markPaymentMade, hasUserPaid } from "@/lib/payments"
-import { useMobile } from "@/hooks/use-mobile" // Mobil kontrolü için eklendi
+import { hasAnyPaymentBeenMade, markPaymentMade } from "@/lib/payments"
 
 interface BitcoinPredictionProps {
   initialHasPaid: boolean
@@ -27,18 +26,11 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
   const [activeTab, setActiveTab] = useState("predict")
   const [priceChange, setPriceChange] = useState<{ value: number; isPositive: boolean } | null>(null)
   const [hasPaid, setHasPaid] = useState(initialHasPaid)
-  const { isMobile } = useMobile() // Mobil cihaz kontrolü
 
   // Function to update payment status
   const handlePaymentSuccess = () => {
     setHasPaid(true)
     markPaymentMade()
-
-    // Mobil cihazlar için ekstra doğrulama
-    if (typeof window !== "undefined") {
-      localStorage.setItem("mobile_payment_verified", "true")
-      localStorage.setItem("payment_timestamp", Date.now().toString())
-    }
   }
 
   useEffect(() => {
@@ -75,31 +67,14 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
   useEffect(() => {
     const checkPaymentStatus = () => {
       const paid = hasAnyPaymentBeenMade()
-      console.log("Payment status check:", paid ? "Paid" : "Not paid")
-
-      // Kullanıcı kimliği varsa, kullanıcıya özel ödeme durumunu kontrol edelim
-      if (user && user.id) {
-        const userPaid = hasUserPaid(user.id)
-        console.log(`User ${user.id} payment check:`, userPaid ? "Paid" : "Not paid")
-
-        // Kullanıcı ödemişse veya genel ödeme yapılmışsa, ödeme durumunu true olarak ayarlayalım
-        if ((paid || userPaid) && !hasPaid) {
-          console.log("Updating payment status to paid")
-          setHasPaid(true)
-        }
-      } else if (paid && !hasPaid) {
-        console.log("Updating payment status to paid")
+      if (paid && !hasPaid) {
         setHasPaid(true)
       }
     }
 
-    // İlk yükleme sırasında hemen kontrol et
-    checkPaymentStatus()
-
-    // Sonra düzenli olarak kontrol et
     const interval = setInterval(checkPaymentStatus, 2000)
     return () => clearInterval(interval)
-  }, [hasPaid, user])
+  }, [hasPaid])
 
   const handleViewProfile = () => {
     if (actions) {
@@ -111,35 +86,6 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     }
   }
 
-  // Mobil cihazlar için ödeme durumunu zorla kontrol et
-  useEffect(() => {
-    if (isMobile) {
-      const forceCheckMobilePayment = () => {
-        const mobilePaymentVerified =
-          typeof window !== "undefined" &&
-          (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
-            localStorage.getItem("mobile_payment_verified") === "true" ||
-            localStorage.getItem("user_payment_verified") === "true")
-
-        console.log("Force checking mobile payment:", mobilePaymentVerified ? "Paid" : "Not paid")
-
-        if (!mobilePaymentVerified && hasPaid) {
-          console.log("Force setting hasPaid to false for mobile")
-          setHasPaid(false)
-        }
-      }
-
-      forceCheckMobilePayment()
-      const interval = setInterval(forceCheckMobilePayment, 1000)
-      return () => clearInterval(interval)
-    }
-  }, [isMobile, hasPaid])
-
-  // Mobil cihazlarda ödeme kontrolünü daha katı hale getirmek için değişiklikler yapıyoruz
-
-  // Mevcut return ifadesini değiştirin ve aşağıdaki gibi güncelleyin:
-  // Ödeme yapılmadıysa sadece ödeme formunu göster
-  // Özellikle mobil cihazlarda daha katı kontrol uyguluyoruz
   return (
     <div
       className="flex min-h-screen flex-col items-center p-4 space-y-6 w-full max-w-4xl mx-auto"
@@ -196,7 +142,7 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
             <div className="text-center p-8 mb-4 bg-black/50 backdrop-blur-md rounded-xl border border-orange-500/30">
               <p className="text-lg text-orange-200">Current Bitcoin Price:</p>
               <div className="flex items-center justify-center gap-3">
-                <p className="text-5xl font-bold text-orange-500">${currentPrice?.toLocaleString()}</p>
+                <p className="text-5xl font-bold text-orange-50">${currentPrice?.toLocaleString()}</p>
                 {priceChange && (
                   <span
                     className={`text-sm px-2 py-1 rounded-md flex items-center ${priceChange.isPositive ? "bg-green-900/30 text-green-400" : "bg-red-900/30 text-red-400"}`}
@@ -214,64 +160,50 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         </CardContent>
       </Card>
 
-      {/* Ödeme yapılmadıysa sadece ödeme formunu göster */}
-      {!hasPaid ? (
-        <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30 w-full">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-orange-500">Payment Required</h2>
-            <p className="text-orange-200">You need to pay 0.1 MON to access Bitcoin price predictions</p>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-black/50 backdrop-blur-md border border-orange-500/30 p-1 rounded-xl">
+          <TabsTrigger
+            value="predict"
+            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
+          >
+            <TrendingUp size={16} />
+            Predict
+          </TabsTrigger>
+          <TabsTrigger
+            value="predictions"
+            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
+          >
+            <Users size={16} />
+            Predictions
+          </TabsTrigger>
+          <TabsTrigger
+            value="winners"
+            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
+          >
+            <Award size={16} />
+            Winners
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="predict" className="mt-4">
+          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
+            <PredictionForm hasPaid={hasPaid} onPaymentSuccess={handlePaymentSuccess} />
           </div>
-          <PredictionForm hasPaid={hasPaid} onPaymentSuccess={handlePaymentSuccess} />
-        </div>
-      ) : (
-        /* Ödeme yapıldıysa tahmin, tahminler ve kazananlar sekmelerini göster */
-        <>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-black/50 backdrop-blur-md border border-orange-500/30 p-1 rounded-xl">
-              <TabsTrigger
-                value="predict"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
-              >
-                <TrendingUp size={16} />
-                Predict
-              </TabsTrigger>
-              <TabsTrigger
-                value="predictions"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
-              >
-                <Users size={16} />
-                Predictions
-              </TabsTrigger>
-              <TabsTrigger
-                value="winners"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
-              >
-                <Award size={16} />
-                Winners
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="predict" className="mt-4">
-              <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
-                <PredictionForm hasPaid={hasPaid} onPaymentSuccess={handlePaymentSuccess} />
-              </div>
-            </TabsContent>
-            <TabsContent value="predictions" className="mt-4">
-              <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
-                <PredictionsList />
-              </div>
-            </TabsContent>
-            <TabsContent value="winners" className="mt-4">
-              <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
-                <WinnersList />
-              </div>
-            </TabsContent>
-          </Tabs>
+        </TabsContent>
+        <TabsContent value="predictions" className="mt-4">
+          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
+            <PredictionsList />
+          </div>
+        </TabsContent>
+        <TabsContent value="winners" className="mt-4">
+          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
+            <WinnersList />
+          </div>
+        </TabsContent>
+      </Tabs>
 
-          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 w-full border border-orange-500/30">
-            <RewardInfo />
-          </div>
-        </>
-      )}
+      <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 w-full border border-orange-500/30">
+        <RewardInfo />
+      </div>
 
       <footer className="w-full text-center p-6 border-t border-orange-500/30 mt-8 bg-black/40 backdrop-blur-md rounded-xl">
         <div className="flex items-center justify-center mb-4">

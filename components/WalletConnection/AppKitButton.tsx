@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
 import { monadTestnet } from "wagmi/chains"
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
-import { useMobile } from "@/hooks/use-mobile"
 
 interface AppKitButtonProps {
   onConnect?: () => void
@@ -12,64 +11,33 @@ interface AppKitButtonProps {
 
 export function AppKitButton({ onConnect }: AppKitButtonProps) {
   const { isConnected, address, chainId } = useAccount()
-  const { connect, isPending: isConnectPending, connectors } = useConnect()
+  const { connect, isPending: isConnectPending } = useConnect()
   const { disconnect } = useDisconnect()
   const { switchChain, isPending: isSwitchPending } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
   const isPending = isConnectPending || isSwitchPending
   const isCorrectNetwork = chainId === monadTestnet.id
-  const { isMobile } = useMobile()
 
-  // Switch to Monad network
+  // Monad ağına geçiş
   const switchToMonad = async () => {
     try {
       setError(null)
       await switchChain({ chainId: monadTestnet.id })
     } catch (err) {
-      console.error("Network switching error:", err)
-      setError("Failed to switch network. Please manually switch to Monad Testnet.")
+      console.error("Ağ değiştirme hatası:", err)
+      setError("Ağ değiştirilemedi. Lütfen manuel olarak Monad Test Ağına geçiş yapın.")
     }
   }
 
-  // Connect to wallet
+  // Cüzdana bağlanma
   const handleConnect = async () => {
     try {
       setError(null)
-
-      // Mobil cihazlarda sadece Farcaster Frame connector kullan
-      if (isMobile) {
-        await connect({ connector: farcasterFrame() })
-      } else {
-        // Masaüstünde önce Farcaster Frame connector ile bağlanmayı dene
-        try {
-          await connect({ connector: farcasterFrame() })
-        } catch (farcasterError) {
-          console.log("Farcaster connection failed, trying injected wallet:", farcasterError)
-
-          // Farcaster bağlantısı başarısız olursa, injected connector (MetaMask) ile dene
-          const injectedConnector = connectors.find((c) => c.id === "injected")
-          if (injectedConnector) {
-            try {
-              console.log("Trying to connect with injected connector:", injectedConnector)
-              await connect({ connector: injectedConnector })
-            } catch (injectedError) {
-              console.error("Injected connector error:", injectedError)
-              throw new Error("Failed to connect with MetaMask. Please make sure MetaMask is installed and unlocked.")
-            }
-          } else {
-            throw new Error("MetaMask not found. Please install MetaMask extension.")
-          }
-        }
-      }
-
+      await connect({ connector: farcasterFrame() })
       if (onConnect) onConnect()
     } catch (err) {
-      console.error("Connection error:", err)
-      if (isMobile) {
-        setError("Please open this app in Warpcast to connect your wallet.")
-      } else {
-        setError(err instanceof Error ? err.message : "An error occurred while connecting to wallet. Please try again.")
-      }
+      console.error("Bağlantı hatası:", err)
+      setError("Cüzdana bağlanırken bir hata oluştu. Lütfen tekrar deneyin.")
     }
   }
 
@@ -86,7 +54,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
               disabled={isPending}
               className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md transition-colors mb-2 disabled:opacity-50"
             >
-              {isPending ? "Processing..." : "Switch to Monad Network"}
+              {isPending ? "İşlem yapılıyor..." : "Monad Ağına Geç"}
             </button>
           )}
           <button
@@ -94,7 +62,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
             disabled={isPending}
             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
           >
-            {isPending ? "Processing..." : "Disconnect"}
+            {isPending ? "İşlem yapılıyor..." : "Bağlantıyı Kes"}
           </button>
         </div>
       ) : (
@@ -103,7 +71,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
           disabled={isPending}
           className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
         >
-          {isPending ? "Connecting..." : isMobile ? "Connect with Warpcast" : "Connect Wallet"}
+          {isPending ? "Bağlanıyor..." : "Cüzdana Bağlan"}
         </button>
       )}
 

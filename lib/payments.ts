@@ -9,19 +9,7 @@ const PREDICTION_COUNT_KEY = "bitcoin_prediction_count"
 export function hasAnyPaymentBeenMade(): boolean {
   if (typeof window !== "undefined") {
     const paymentStatus = localStorage.getItem(PAYMENT_STATUS_KEY)
-    const userPaymentStatus = localStorage.getItem("user_payment_verified")
-    const mobilePaymentStatus = localStorage.getItem("mobile_payment_verified")
-
-    // Tüm cihazlar için aynı ödeme kontrolü
-    if (paymentStatus === "paid" || userPaymentStatus === "true" || mobilePaymentStatus === "true") {
-      // Ödeme yapıldığını doğrulayalım
-      console.log("Payment verification: Payment has been made")
-      return true
-    }
-
-    // Ödeme yapılmadığını loglayalım
-    console.log("Payment verification: No payment found")
-    return false
+    return paymentStatus === "paid"
   }
   return false
 }
@@ -31,24 +19,7 @@ export function hasAnyPaymentBeenMade(): boolean {
  */
 export function markPaymentMade(): void {
   if (typeof window !== "undefined") {
-    console.log("Marking payment as made")
-
-    // Tüm ödeme anahtarlarını ayarla
     localStorage.setItem(PAYMENT_STATUS_KEY, "paid")
-    localStorage.setItem("user_payment_verified", "true")
-    localStorage.setItem("mobile_payment_verified", "true")
-
-    // Mobil cihazlar için ekstra doğrulama
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      typeof navigator !== "undefined" ? navigator.userAgent : "",
-    )
-
-    if (isMobileDevice) {
-      localStorage.setItem("mobile_strict_payment_verified", "true")
-    }
-
-    // Ödeme zamanını da kaydedelim
-    localStorage.setItem("payment_timestamp", Date.now().toString())
   }
 }
 
@@ -80,9 +51,6 @@ export function incrementPredictionCount(): void {
 export function resetPaymentStatus(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(PAYMENT_STATUS_KEY)
-    localStorage.removeItem("user_payment_verified")
-    localStorage.removeItem("mobile_payment_verified")
-    localStorage.removeItem("payment_timestamp")
   }
 }
 
@@ -96,22 +64,4 @@ export function markUserAsPaid(userId: string | number): void {
   // This is a mock implementation for demonstration purposes.
   console.log(`Marking user ${userId} as paid. (Mock Implementation)`)
   markPaymentMade() // Also set the browser-level flag
-
-  // Kullanıcı ID'sine özel bir ödeme kaydı tutalım
-  if (typeof window !== "undefined") {
-    localStorage.setItem(`user_${userId}_payment_status`, "paid")
-    localStorage.setItem(`user_${userId}_payment_timestamp`, Date.now().toString())
-  }
-}
-
-/**
- * Check if a specific user has paid
- * @param userId The ID of the user to check
- * @returns True if the user has paid, false otherwise
- */
-export function hasUserPaid(userId: string | number): boolean {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem(`user_${userId}_payment_status`) === "paid"
-  }
-  return false
 }

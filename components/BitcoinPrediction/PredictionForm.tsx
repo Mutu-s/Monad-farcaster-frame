@@ -6,18 +6,16 @@ import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Check, AlertTriangle } from "lucide-react"
+import { LineChart, Check } from "lucide-react"
 import { addPrediction } from "@/lib/predictions"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/context/auth-context"
-import { incrementPredictionCount, markPaymentMade } from "@/lib/payments"
+import { incrementPredictionCount } from "@/lib/payments"
 import { useSendTransaction } from "wagmi"
 import { parseEther } from "viem"
 import AppKitButton from "../WalletConnection/AppKitButton"
 import { useAccount } from "wagmi"
-import { useMobile } from "@/hooks/use-mobile"
-import MetaMaskConnector from "../WalletConnection/MetaMaskConnector"
 
 // Payment address for MON tokens
 const PAYMENT_ADDRESS = "0x9EF7b8dd1425B252d9468A53e6c9664da544D516"
@@ -38,52 +36,29 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   const [submittedPrice, setSubmittedPrice] = useState("")
   const [submittedTimeframe, setSubmittedTimeframe] = useState("")
   const formRef = useRef<HTMLFormElement>(null)
-  const { isMobile } = useMobile()
 
   // Handle wallet connection
   const handleConnect = () => {
-    // AppKitButton bileşeni bağlantıyı yönetecek
-    console.log("Connect button clicked in PredictionForm")
-  }
-
-  // Mobil cihazlar için ödeme uyarısını güncelliyoruz
-  // Hem mobil hem de web için aynı uyarıyı gösteriyoruz
-  const handlePayment = () => {
-    if (!isConnected) return
-
-    toast({
-      title: "Payment Processing",
-      description: "Please wait for transaction confirmation after payment.",
-    })
-
-    // Regular payment before prediction
-    sendTransaction({
-      to: PAYMENT_ADDRESS,
-      value: parseEther("0.1"),
-    })
+    // The actual connection is handled by the AppKitButton component
   }
 
   // Handle payment success
   useEffect(() => {
     if (isSuccess && !hasPaid) {
-      // Ödeme başarılı olduğunda
-      console.log("Payment successful, updating status")
-
-      // Tüm cihazlar için aynı doğrulama
-      if (typeof window !== "undefined") {
-        localStorage.setItem("mobile_payment_verified", "true")
-        localStorage.setItem("bitcoin_prediction_payment_status", "paid")
-        localStorage.setItem("user_payment_verified", "true")
-        localStorage.setItem("payment_timestamp", Date.now().toString())
-      }
-
-      // Ödeme durumunu güncelle
-      markPaymentMade()
-
-      // Parent bileşene bildir
+      // Regular payment success
       onPaymentSuccess()
     }
   }, [isSuccess, hasPaid, onPaymentSuccess])
+
+  // Handle payment
+  const handlePayment = () => {
+    if (!isConnected) return
+
+    sendTransaction({
+      to: PAYMENT_ADDRESS,
+      value: parseEther("0.1"),
+    })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,41 +72,13 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
       return
     }
 
-    // Ödeme kontrolünü güçlendirelim - hem hasPaid prop'unu hem de localStorage'ı kontrol edelim
     if (!hasPaid) {
-      // Yerel depolamadan tekrar kontrol edelim
-      const paymentVerified =
-        typeof window !== "undefined" &&
-        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
-          localStorage.getItem("mobile_payment_verified") === "true" ||
-          localStorage.getItem("user_payment_verified") === "true")
-
-      if (!paymentVerified) {
-        toast({
-          title: "Payment Required",
-          description: "You must send 0.1 MON to participate in the prediction contest.",
-          variant: "destructive",
-        })
-        return
-      }
-    }
-
-    // Mobil cihazlar için ekstra kontrol
-    if (isMobile && !hasPaid) {
-      const paymentVerified =
-        typeof window !== "undefined" &&
-        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
-          localStorage.getItem("mobile_payment_verified") === "true" ||
-          localStorage.getItem("user_payment_verified") === "true")
-
-      if (!paymentVerified) {
-        toast({
-          title: "Payment Required",
-          description: "Mobile users must pay 0.1 MON to participate.",
-          variant: "destructive",
-        })
-        return
-      }
+      toast({
+        title: "Payment Required",
+        description: "You must send 0.1 MON to participate in the prediction contest.",
+        variant: "destructive",
+      })
+      return
     }
 
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
@@ -148,23 +95,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     try {
       // Always use local images
       const profilePicture = user?.username === "0xmutu" ? "/images/mutu-logo-new.png" : "/images/default-avatar.png"
-
-      // Ödeme kontrolünü bir kez daha yapalım
-      if (
-        !hasPaid &&
-        typeof window !== "undefined" &&
-        localStorage.getItem("bitcoin_prediction_payment_status") !== "paid" &&
-        localStorage.getItem("mobile_payment_verified") !== "true" &&
-        localStorage.getItem("user_payment_verified") !== "true"
-      ) {
-        toast({
-          title: "Payment Verification Failed",
-          description: "Please make the required payment before submitting a prediction.",
-          variant: "destructive",
-        })
-        setIsSubmitting(false)
-        return
-      }
 
       await addPrediction({
         userId: user?.id || Math.floor(Math.random() * 100000),
@@ -237,7 +167,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
                 fontWeight: "600",
               }}
             >
-              Access Bitcoin Predictions
+              Bitcoin Price Prediction
             </h1>
             <p
               style={{
@@ -246,24 +176,10 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
                 marginTop: "4px",
               }}
             >
-              One-time payment required to unlock all features
+              Predict the future price of Bitcoin and win rewards
             </p>
           </div>
         </div>
-
-        {/* Mobil cihaz uyarısı */}
-        {isMobile && (
-          <div className="mb-6 p-4 bg-amber-900/30 border border-amber-600/30 rounded-lg flex items-start gap-3">
-            <AlertTriangle className="text-amber-500 h-5 w-5 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-amber-400 font-medium mb-1">Mobile Device Detected</h3>
-              <p className="text-amber-300 text-sm">
-                To ensure proper payment verification on mobile, please make sure to complete the payment process and
-                wait for confirmation.
-              </p>
-            </div>
-          </div>
-        )}
 
         <div className="flex justify-center mb-6 bg-[#2D2B3B] p-4 rounded-lg">
           <LineChart size={200} className="text-[#9B6DFF]" strokeWidth={1.5} />
@@ -271,14 +187,13 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
 
         <div className="space-y-6">
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50] text-center">
-            <h2 className="text-2xl font-bold text-[#E9E8FF] mb-4">Unlock Full Access</h2>
-            <p className="text-[#B8A8FF] mb-6">Pay 0.1 MON to access all Bitcoin price prediction features</p>
+            <h2 className="text-2xl font-bold text-[#E9E8FF] mb-4">Prediction Fee</h2>
+            <p className="text-[#B8A8FF] mb-6">You need to pay 0.1 MON to make a Bitcoin price prediction</p>
 
             {!isConnected ? (
               <div className="w-full">
                 <p className="text-center mb-4 text-[#B8A8FF]">Connect your wallet to continue</p>
-                {/* Mobil cihazlarda sadece AppKitButton, masaüstünde sadece MetaMaskConnector kullan */}
-                {isMobile ? <AppKitButton onConnect={handleConnect} /> : <MetaMaskConnector />}
+                <AppKitButton onConnect={handleConnect} />
               </div>
             ) : (
               <button
@@ -313,31 +228,9 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
                   }
                 }}
               >
-                {isPending ? "Processing..." : `Pay 0.1 MON to Unlock`}
+                {isPending ? "Processing..." : `Pay 0.1 MON Entry Fee`}
               </button>
             )}
-          </div>
-
-          <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50] text-center">
-            <h3 className="text-xl font-bold text-[#E9E8FF] mb-4">What You'll Get</h3>
-            <ul className="text-[#B8A8FF] space-y-3 text-left">
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-400 flex-shrink-0" />
-                Make Bitcoin price predictions for different timeframes
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-400 flex-shrink-0" />
-                View all community predictions
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-400 flex-shrink-0" />
-                See past winners and their rewards
-              </li>
-              <li className="flex items-center gap-2">
-                <Check size={16} className="text-green-400 flex-shrink-0" />
-                Compete for MON token rewards
-              </li>
-            </ul>
           </div>
 
           {isSuccess && (
@@ -355,7 +248,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             fontSize: "14px",
           }}
         >
-          One-time payment gives you unlimited access to all prediction features.
+          Winners with correct predictions will receive rewards based on their accuracy.
         </p>
       </div>
     )
