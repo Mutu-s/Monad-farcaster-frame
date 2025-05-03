@@ -33,12 +33,6 @@ export function Home() {
                 <p className="font-medium text-orange-900">
                   Welcome, {context.user.displayName || context.user.username}
                 </p>
-                <button
-                  className="text-sm text-orange-600 hover:text-orange-800"
-                  onClick={() => context.user?.fid && context.actions?.viewProfile({ fid: context.user.fid })}
-                >
-                  View Profile
-                </button>
               </div>
             </div>
           )}
@@ -81,12 +75,6 @@ export function Demo() {
                 <p className="font-medium text-orange-900">
                   Welcome, {context.user.displayName || context.user.username}
                 </p>
-                <button
-                  className="text-sm text-orange-600 hover:text-orange-800"
-                  onClick={() => context.user?.fid && context.actions?.viewProfile({ fid: context.user.fid })}
-                >
-                  View Profile
-                </button>
               </div>
             </div>
           )}

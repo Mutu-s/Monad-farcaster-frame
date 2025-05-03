@@ -6,9 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getPredictions } from "@/lib/predictions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TrendingUp, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ExternalLink } from "lucide-react"
-import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 
 interface Prediction {
   id: string
@@ -22,7 +19,6 @@ interface Prediction {
 }
 
 export default function PredictionsList() {
-  const { actions } = useMiniAppContext()
   const [predictions, setPredictions] = useState<Prediction[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -50,16 +46,6 @@ export default function PredictionsList() {
     return options[timeframe] || timeframe
   }
 
-  const handleViewProfile = () => {
-    if (actions) {
-      // If in Farcaster app, use the SDK to open URL
-      actions.openUrl("https://warpcast.com/0xmutu")
-    } else {
-      // Fallback for browser
-      window.open("https://warpcast.com/0xmutu", "_blank")
-    }
-  }
-
   return (
     <Card className="bg-black/40 border border-orange-500/30 text-white backdrop-blur-md">
       <CardHeader>
@@ -67,18 +53,6 @@ export default function PredictionsList() {
           <div>
             <CardTitle className="text-orange-500">Recent Predictions</CardTitle>
             <CardDescription className="text-orange-200/70">User predictions for Bitcoin price</CardDescription>
-          </div>
-          <div className="flex items-center">
-            <img src="/images/mutu-logo-new.png" alt="mutu logo" width={30} height={30} className="rounded-full mr-2" />
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
-              onClick={handleViewProfile}
-            >
-              <span>View Profile</span>
-              <ExternalLink size={14} />
-            </Button>
           </div>
         </div>
       </CardHeader>
