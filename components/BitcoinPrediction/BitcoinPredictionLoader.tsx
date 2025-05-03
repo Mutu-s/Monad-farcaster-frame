@@ -9,25 +9,11 @@ export default function BitcoinPredictionLoader() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Function to check payment status
-    const checkPaymentStatus = () => {
-      const paid = hasAnyPaymentBeenMade()
-      setHasPaid(paid)
-    }
-
-    // Check initially
-    checkPaymentStatus()
-
-    // Set up an interval to check periodically
-    const interval = setInterval(checkPaymentStatus, 1000)
-
-    // Clean up interval on unmount
-    return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
+    // Check if user has already paid
+    const paid = hasAnyPaymentBeenMade()
+    setHasPaid(paid)
     setIsLoading(false)
-  }, [hasPaid])
+  }, [])
 
   if (isLoading) {
     return (

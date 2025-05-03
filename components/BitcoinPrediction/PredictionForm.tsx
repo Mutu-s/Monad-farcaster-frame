@@ -40,6 +40,23 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   const formRef = useRef<HTMLFormElement>(null)
   const { isMobile } = useMobile()
 
+  // Add a new state to track if the user has already made a prediction
+  const [hasAlreadyPredicted, setHasAlreadyPredicted] = useState(false)
+
+  // Add this useEffect to check if the user has already made a prediction when the component mounts
+  useEffect(() => {
+    // Check localStorage for existing prediction
+    if (typeof window !== "undefined") {
+      const existingPrediction = localStorage.getItem("user_prediction")
+      if (existingPrediction) {
+        const prediction = JSON.parse(existingPrediction)
+        setSubmittedPrice(prediction.price)
+        setSubmittedTimeframe(prediction.timeframe)
+        setHasAlreadyPredicted(true)
+      }
+    }
+  }, [])
+
   // Handle wallet connection for web (MetaMask)
   const connectMetaMask = async () => {
     if (typeof window !== "undefined" && window.ethereum) {
@@ -125,6 +142,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
     })
   }
 
+  // Modify the handleSubmit function to save the prediction to localStorage
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -178,6 +196,14 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       setSubmittedPrice(price)
       setSubmittedTimeframe(timeframe)
 
+      // Save to localStorage to track that user has made a prediction
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user_prediction", JSON.stringify({ price, timeframe }))
+      }
+
+      // Set that user has already predicted
+      setHasAlreadyPredicted(true)
+
       // Show success message
       toast({
         title: "Prediction Submitted!",
@@ -209,7 +235,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         // Reset to payment page
         setPredictionSubmitted(false)
 
-        // Reset payment status - make sure to remove the payment status from localStorage
+        // Reset payment status
         if (typeof window !== "undefined") {
           localStorage.removeItem("bitcoin_prediction_payment_status")
         }
@@ -430,7 +456,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
             <p className="text-green-300 mb-4">
               Your Bitcoin price prediction has been successfully recorded. Thank you for participating!
             </p>
-            <p className="text-green-300">Returning to payment page in a moment...</p>
           </div>
 
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">
@@ -453,9 +478,37 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      ) : hasAlreadyPredicted ? (
+        // Show the user's existing prediction with disabled form
+        <div className="space-y-6">
+          <div className="p-6 bg-blue-800/20 border border-blue-600/30 rounded-lg text-center">
+            <h2 className="text-xl font-bold text-blue-400 mb-2">You've Already Made a Prediction</h2>
+            <p className="text-blue-300 mb-4">
+              You can only make one prediction per contest. Your current prediction is shown below.
+            </p>
+          </div>
 
-            <div className="mt-6 p-4 bg-blue-800/20 border border-blue-600/30 rounded-md">
-              <p className="text-blue-400 text-center">Refresh the page if you want to make another prediction.</p>
+          <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">
+            <h3 className="text-xl font-bold text-[#E9E8FF] mb-4 text-center">Your Prediction</h3>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-[#B8A8FF] text-sm">Predicted Bitcoin Price ($)</p>
+                <p className="text-[#E9E8FF] text-lg font-medium">${submittedPrice}</p>
+              </div>
+
+              <div>
+                <p className="text-[#B8A8FF] text-sm">Time Frame</p>
+                <p className="text-[#E9E8FF] text-lg font-medium">
+                  {submittedTimeframe === "1day"
+                    ? "1 Day Later"
+                    : submittedTimeframe === "1week"
+                      ? "1 Week Later"
+                      : "1 Month Later"}
+                </p>
+              </div>
             </div>
           </div>
         </div>

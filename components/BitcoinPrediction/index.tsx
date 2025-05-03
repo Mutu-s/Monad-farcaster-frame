@@ -36,10 +36,6 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
   // Add this function to reset payment status
   const resetPaymentStatus = () => {
     setHasPaid(false)
-    // Also remove from localStorage to ensure it's completely reset
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("bitcoin_prediction_payment_status")
-    }
   }
 
   useEffect(() => {
