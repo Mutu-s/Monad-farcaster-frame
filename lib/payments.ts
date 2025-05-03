@@ -1,6 +1,3 @@
-// Mock database for payments
-const paidUsers: Record<string, boolean> = {}
-
 // Local storage key for payment status
 const PAYMENT_STATUS_KEY = "bitcoin_prediction_payment_status"
 const PREDICTION_COUNT_KEY = "bitcoin_prediction_count"
@@ -11,11 +8,6 @@ const PREDICTION_COUNT_KEY = "bitcoin_prediction_count"
  * @returns True if the user has paid, false otherwise
  */
 export function hasUserPaid(userId: string): boolean {
-  // Check if the user is in the paid users list
-  if (paidUsers[userId]) {
-    return true
-  }
-
   // Check local storage as a fallback
   if (typeof window !== "undefined") {
     const paymentStatus = localStorage.getItem(PAYMENT_STATUS_KEY)
@@ -30,9 +22,6 @@ export function hasUserPaid(userId: string): boolean {
  * @param userId The user ID to mark as paid
  */
 export function markUserAsPaid(userId: string): void {
-  // Add the user to the paid users list
-  paidUsers[userId] = true
-
   // Store in local storage as a fallback
   if (typeof window !== "undefined") {
     localStorage.setItem(PAYMENT_STATUS_KEY, "paid")
@@ -87,12 +76,7 @@ export function incrementPredictionCount(): void {
  * @returns The payment amount in MON
  */
 export function getPaymentAmount(): string {
-  const predictionCount = getPredictionCount()
-  // İlk tahmin: 0.1 MON
-  // İkinci tahmin: 0.2 MON
-  // Üçüncü tahmin: 0.3 MON
-  // Ve bu şekilde devam eder
-  return (0.1 * (predictionCount + 1)).toFixed(1)
+  return "0.1"
 }
 
 /**
