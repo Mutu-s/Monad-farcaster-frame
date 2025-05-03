@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Check } from "lucide-react"
+import { LineChart, Check, Clock } from "lucide-react"
 import { addPrediction } from "@/lib/predictions"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
@@ -27,6 +27,29 @@ interface PredictionFormProps {
   onResetPayment?: () => void
 }
 
+// Function to check if a date is today
+function isToday(date: Date): boolean {
+  const today = new Date()
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  )
+}
+
+// Function to get time until midnight
+function getTimeUntilMidnight(): string {
+  const now = new Date()
+  const midnight = new Date()
+  midnight.setHours(24, 0, 0, 0)
+
+  const diffMs = midnight.getTime() - now.getTime()
+  const diffHrs = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+  return `${diffHrs}h ${diffMins}m`
+}
+
 export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayment }: PredictionFormProps) {
   const { isAuthenticated, user } = useAuth()
   const [price, setPrice] = useState("")
@@ -40,10 +63,25 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   const formRef = useRef<HTMLFormElement>(null)
   const { isMobile } = useMobile()
 
-  // Add a new state to track if the user has already made a prediction
-  const [hasAlreadyPredicted, setHasAlreadyPredicted] = useState(false)
+  // Add states for daily prediction tracking
+  const [hasAlreadyPredictedToday, setHasAlreadyPredictedToday] = useState(false)
+  const [lastPredictionDate, setLastPredictionDate] = useState<Date | null>(null)
+  const [timeUntilNextPrediction, setTimeUntilNextPrediction] = useState("")
 
-  // Add this useEffect to check if the user has already made a prediction when the component mounts
+  // Update time until midnight every minute
+  useEffect(() => {
+    if (hasAlreadyPredictedToday) {
+      setTimeUntilNextPrediction(getTimeUntilMidnight())
+
+      const interval = setInterval(() => {
+        setTimeUntilNextPrediction(getTimeUntilMidnight())
+      }, 60000) // Update every minute
+
+      return () => clearInterval(interval)
+    }
+  }, [hasAlreadyPredictedToday])
+
+  // Add this useEffect to check if the user has already made a prediction today when the component mounts
   useEffect(() => {
     // Check localStorage for existing prediction
     if (typeof window !== "undefined") {
@@ -52,7 +90,17 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         const prediction = JSON.parse(existingPrediction)
         setSubmittedPrice(prediction.price)
         setSubmittedTimeframe(prediction.timeframe)
-        setHasAlreadyPredicted(true)
+
+        // Check if the prediction was made today
+        const predictionDate = new Date(prediction.timestamp)
+        setLastPredictionDate(predictionDate)
+
+        if (isToday(predictionDate)) {
+          setHasAlreadyPredictedToday(true)
+        } else {
+          // If prediction was not made today, user can make a new prediction
+          setHasAlreadyPredictedToday(false)
+        }
       }
     }
   }, [])
@@ -142,7 +190,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
     })
   }
 
-  // Modify the handleSubmit function to save the prediction to localStorage
+  // Modify the handleSubmit function to save the prediction to localStorage with timestamp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -196,13 +244,24 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       setSubmittedPrice(price)
       setSubmittedTimeframe(timeframe)
 
-      // Save to localStorage to track that user has made a prediction
+      // Get current date and time
+      const now = new Date()
+      setLastPredictionDate(now)
+
+      // Save to localStorage to track that user has made a prediction today
       if (typeof window !== "undefined") {
-        localStorage.setItem("user_prediction", JSON.stringify({ price, timeframe }))
+        localStorage.setItem(
+          "user_prediction",
+          JSON.stringify({
+            price,
+            timeframe,
+            timestamp: now.toISOString(),
+          }),
+        )
       }
 
-      // Set that user has already predicted
-      setHasAlreadyPredicted(true)
+      // Set that user has already predicted today
+      setHasAlreadyPredictedToday(true)
 
       // Show success message
       toast({
@@ -480,18 +539,24 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
             </div>
           </div>
         </div>
-      ) : hasAlreadyPredicted ? (
-        // Show the user's existing prediction with disabled form
+      ) : hasAlreadyPredictedToday ? (
+        // Show the user's existing prediction with disabled form and countdown to next prediction
         <div className="space-y-6">
           <div className="p-6 bg-blue-800/20 border border-blue-600/30 rounded-lg text-center">
-            <h2 className="text-xl font-bold text-blue-400 mb-2">You've Already Made a Prediction</h2>
-            <p className="text-blue-300 mb-4">
-              You can only make one prediction per contest. Your current prediction is shown below.
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-blue-500/20 p-3 rounded-full">
+                <Clock className="h-12 w-12 text-blue-400" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-blue-400 mb-2">Daily Prediction Limit Reached</h2>
+            <p className="text-blue-300 mb-2">
+              You can make one prediction per day. Your next prediction will be available at midnight.
             </p>
+            <p className="text-blue-300 font-semibold">Time until next prediction: {timeUntilNextPrediction}</p>
           </div>
 
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">
-            <h3 className="text-xl font-bold text-[#E9E8FF] mb-4 text-center">Your Prediction</h3>
+            <h3 className="text-xl font-bold text-[#E9E8FF] mb-4 text-center">Today's Prediction</h3>
 
             <div className="space-y-4">
               <div>
@@ -509,11 +574,20 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
                       : "1 Month Later"}
                 </p>
               </div>
+
+              {lastPredictionDate && (
+                <div>
+                  <p className="text-[#B8A8FF] text-sm">Submitted</p>
+                  <p className="text-[#E9E8FF] text-lg font-medium">
+                    {lastPredictionDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       ) : (
-        // Show prediction form if no prediction has been submitted yet
+        // Show prediction form if no prediction has been submitted today
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="price" className="text-[#B8A8FF]">
@@ -546,6 +620,12 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="p-4 bg-blue-800/10 border border-blue-600/20 rounded-md mt-4">
+            <p className="text-blue-300 text-center text-sm">
+              You can make one prediction per day. Your prediction right resets at midnight.
+            </p>
           </div>
 
           <button
