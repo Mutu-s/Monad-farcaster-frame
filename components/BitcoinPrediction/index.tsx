@@ -91,27 +91,6 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         console.log("Updating payment status to paid")
         setHasPaid(true)
       }
-
-      // Mobil cihazlar için ekstra kontrol
-      if (isMobile) {
-        // Mobil cihazlarda ödeme durumunu doğrudan localStorage'dan kontrol et
-        const mobilePaymentVerified =
-          typeof window !== "undefined" &&
-          (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
-            localStorage.getItem("mobile_payment_verified") === "true" ||
-            localStorage.getItem("user_payment_verified") === "true")
-
-        console.log("Mobile payment verification in component:", mobilePaymentVerified ? "Paid" : "Not paid")
-
-        // Mobil cihazda ödeme yapılmamışsa, hasPaid'i false olarak ayarla
-        if (!mobilePaymentVerified && hasPaid) {
-          console.log("Mobile payment not verified, setting hasPaid to false")
-          setHasPaid(false)
-        } else if (mobilePaymentVerified && !hasPaid) {
-          console.log("Mobile payment verified, setting hasPaid to true")
-          setHasPaid(true)
-        }
-      }
     }
 
     // İlk yükleme sırasında hemen kontrol et
@@ -120,7 +99,7 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     // Sonra düzenli olarak kontrol et
     const interval = setInterval(checkPaymentStatus, 2000)
     return () => clearInterval(interval)
-  }, [hasPaid, user, isMobile])
+  }, [hasPaid, user])
 
   const handleViewProfile = () => {
     if (actions) {
@@ -217,7 +196,7 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
             <div className="text-center p-8 mb-4 bg-black/50 backdrop-blur-md rounded-xl border border-orange-500/30">
               <p className="text-lg text-orange-200">Current Bitcoin Price:</p>
               <div className="flex items-center justify-center gap-3">
-                <p className="text-5xl font-bold text-orange-50">${currentPrice?.toLocaleString()}</p>
+                <p className="text-5xl font-bold text-orange-500">${currentPrice?.toLocaleString()}</p>
                 {priceChange && (
                   <span
                     className={`text-sm px-2 py-1 rounded-md flex items-center ${priceChange.isPositive ? "bg-green-900/30 text-green-400" : "bg-red-900/30 text-red-400"}`}

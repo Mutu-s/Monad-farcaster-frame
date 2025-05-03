@@ -12,27 +12,11 @@ export default function BitcoinPredictionLoader() {
   const { user } = useAuth()
   const { isMobile } = useMobile() // Mobil cihaz kontrolü
 
+  // Mobil cihazlar için görünümü web ile aynı hale getirmek için değişiklikler yapıyoruz
+  // checkPaymentStatus fonksiyonunu güncelliyoruz
+
   const checkPaymentStatus = useCallback(() => {
-    // Mobil cihazlar için daha katı kontrol
-    if (isMobile) {
-      console.log("Mobile device detected, applying strict payment verification")
-
-      // Mobil cihazlarda ödeme durumunu doğrudan localStorage'dan kontrol et
-      const mobilePaymentVerified =
-        typeof window !== "undefined" &&
-        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
-          localStorage.getItem("mobile_payment_verified") === "true" ||
-          localStorage.getItem("user_payment_verified") === "true")
-
-      console.log("Mobile payment verification:", mobilePaymentVerified ? "Paid" : "Not paid")
-
-      // Mobil cihazlarda ödeme yapılmamışsa, hasPaid'i kesinlikle false olarak ayarla
-      setHasPaid(mobilePaymentVerified)
-      setIsLoading(false)
-      return
-    }
-
-    // Mobil olmayan cihazlar için normal kontrol
+    // Ödeme durumunu kontrol et (mobil ve web için aynı mantık)
     const paid = hasAnyPaymentBeenMade()
     console.log("Initial payment check:", paid ? "Paid" : "Not paid")
 
@@ -47,8 +31,11 @@ export default function BitcoinPredictionLoader() {
       setHasPaid(paid)
     }
 
+    // Mobil cihazlar için ek kontrol yapmıyoruz, web ile aynı görünümü sağlamak için
+    // Böylece mobil cihazlarda da "Unlock Full Access" kısmı görünecek
+
     setIsLoading(false)
-  }, [user, isMobile])
+  }, [user])
 
   useEffect(() => {
     checkPaymentStatus()

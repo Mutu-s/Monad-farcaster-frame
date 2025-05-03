@@ -46,17 +46,15 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     console.log("Connect button clicked in PredictionForm")
   }
 
-  // Handle payment
+  // Mobil cihazlar için ödeme uyarısını güncelliyoruz
+  // Hem mobil hem de web için aynı uyarıyı gösteriyoruz
   const handlePayment = () => {
     if (!isConnected) return
 
-    // Mobil cihazlar için ödeme öncesi uyarı
-    if (isMobile) {
-      toast({
-        title: "Mobile Payment",
-        description: "Please wait for transaction confirmation after payment.",
-      })
-    }
+    toast({
+      title: "Payment Processing",
+      description: "Please wait for transaction confirmation after payment.",
+    })
 
     // Regular payment before prediction
     sendTransaction({
@@ -71,17 +69,12 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
       // Ödeme başarılı olduğunda
       console.log("Payment successful, updating status")
 
-      // Mobil cihazlar için ekstra doğrulama
+      // Tüm cihazlar için aynı doğrulama
       if (typeof window !== "undefined") {
         localStorage.setItem("mobile_payment_verified", "true")
         localStorage.setItem("bitcoin_prediction_payment_status", "paid")
         localStorage.setItem("user_payment_verified", "true")
         localStorage.setItem("payment_timestamp", Date.now().toString())
-
-        // Mobil cihazlar için ekstra katı doğrulama
-        if (isMobile) {
-          localStorage.setItem("mobile_strict_payment_verified", "true")
-        }
       }
 
       // Ödeme durumunu güncelle
@@ -89,15 +82,8 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
 
       // Parent bileşene bildir
       onPaymentSuccess()
-
-      // Mobil cihazlarda sayfayı yenile (ödeme durumunun doğru şekilde güncellenmesi için)
-      if (isMobile && typeof window !== "undefined") {
-        setTimeout(() => {
-          window.location.reload()
-        }, 2000)
-      }
     }
-  }, [isSuccess, hasPaid, onPaymentSuccess, isMobile])
+  }, [isSuccess, hasPaid, onPaymentSuccess])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

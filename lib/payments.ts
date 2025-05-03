@@ -12,21 +12,7 @@ export function hasAnyPaymentBeenMade(): boolean {
     const userPaymentStatus = localStorage.getItem("user_payment_verified")
     const mobilePaymentStatus = localStorage.getItem("mobile_payment_verified")
 
-    // Mobil cihazlar için daha katı kontrol
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      typeof navigator !== "undefined" ? navigator.userAgent : "",
-    )
-
-    if (isMobileDevice) {
-      // Mobil cihazlarda tüm ödeme anahtarlarını kontrol et ve hepsi true olmalı
-      const strictMobileCheck =
-        paymentStatus === "paid" && (userPaymentStatus === "true" || mobilePaymentStatus === "true")
-
-      console.log("Strict mobile payment check:", strictMobileCheck ? "Paid" : "Not paid")
-      return strictMobileCheck
-    }
-
-    // Ödeme durumunu daha sıkı kontrol edelim
+    // Tüm cihazlar için aynı ödeme kontrolü
     if (paymentStatus === "paid" || userPaymentStatus === "true" || mobilePaymentStatus === "true") {
       // Ödeme yapıldığını doğrulayalım
       console.log("Payment verification: Payment has been made")
