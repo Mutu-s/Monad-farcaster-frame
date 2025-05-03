@@ -38,9 +38,11 @@ export default function LoginForm() {
     await login("farcaster")
   }
 
+  // Handle wallet login when connected fonksiyonunu değiştir
   const handleWalletConnect = () => {
     // The actual connection is handled by the AppKitButton component
     // After connection, the useEffect above will trigger the login
+    console.log("Attempting to connect wallet - prioritizing Farcaster wallet")
   }
 
   const isFarcasterAvailable = !!context?.user

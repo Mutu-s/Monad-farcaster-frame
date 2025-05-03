@@ -34,13 +34,19 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
     try {
       setError(null)
 
-      // First try to connect with injected connector (MetaMask)
-      const injectedConnector = connectors.find((c) => c.id === "injected")
-      if (injectedConnector) {
-        await connect({ connector: injectedConnector })
-      } else {
-        // If injected connector is not available, try with Farcaster Frame connector
+      // Önce Farcaster Frame connector ile bağlanmayı dene
+      try {
         await connect({ connector: farcasterFrame() })
+      } catch (farcasterError) {
+        console.log("Farcaster connection failed, trying injected wallet:", farcasterError)
+
+        // Farcaster bağlantısı başarısız olursa, injected connector (MetaMask) ile dene
+        const injectedConnector = connectors.find((c) => c.id === "injected")
+        if (injectedConnector) {
+          await connect({ connector: injectedConnector })
+        } else {
+          throw new Error("No compatible wallet found")
+        }
       }
 
       if (onConnect) onConnect()
