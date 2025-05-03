@@ -83,8 +83,17 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
 
   const handleViewProfile = () => {
     if (actions) {
-      // If in Farcaster app, use the SDK to open URL
-      actions.openUrl("https://warpcast.com/0xmutu")
+      // Use the viewProfile SDK method if available
+      try {
+        // FID for 0xmutu - replace with the actual FID if different
+        const mutuFid = 453685
+        actions.viewProfile({ fid: mutuFid })
+        console.log("Viewing profile with FID:", mutuFid)
+      } catch (error) {
+        console.error("Error viewing profile:", error)
+        // Fallback to openUrl if viewProfile fails
+        actions.openUrl("https://warpcast.com/0xmutu")
+      }
     } else {
       // Fallback for browser
       window.open("https://warpcast.com/0xmutu", "_blank")
