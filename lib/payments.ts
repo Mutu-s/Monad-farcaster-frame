@@ -96,10 +96,16 @@ export function getPredictionNumber(): number {
 }
 
 /**
- * Reset payment status (for testing)
+ * Reset payment status (for testing and after prediction submission)
  */
 export function resetPaymentStatus(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(PAYMENT_STATUS_KEY)
   }
+}
+
+// Add this function to reset payment status after a prediction
+export function resetPaymentAfterPrediction(): void {
+  resetPaymentStatus()
+  // We don't reset the prediction count, as we want to keep track of how many predictions were made
 }

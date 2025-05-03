@@ -209,7 +209,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         // Reset to payment page
         setPredictionSubmitted(false)
 
-        // Reset payment status
+        // Reset payment status - make sure to remove the payment status from localStorage
         if (typeof window !== "undefined") {
           localStorage.removeItem("bitcoin_prediction_payment_status")
         }
