@@ -2,8 +2,26 @@
 
 import { useState } from "react"
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
-import { monadTestnet } from "wagmi/chains"
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
+import type { Chain } from "wagmi"
+
+const monadTestnetUpdated: Chain = {
+  id: 10143,
+  name: "Monad Testnet",
+  network: "monad-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "MONAD",
+    symbol: "MON",
+  },
+  rpcUrls: {
+    public: { http: ["https://testnet-rpc.monad.xyz/"] },
+    default: { http: ["https://testnet-rpc.monad.xyz/"] },
+  },
+  blockExplorers: {
+    default: { name: "MonadExplorer", url: "https://testnet.monadexplorer.com/" },
+  },
+}
 
 interface AppKitButtonProps {
   onConnect?: () => void
@@ -16,28 +34,28 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
   const { switchChain, isPending: isSwitchPending } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
   const isPending = isConnectPending || isSwitchPending
-  const isCorrectNetwork = chainId === monadTestnet.id
+  const isCorrectNetwork = chainId === monadTestnetUpdated.id
 
-  // Monad ağına geçiş
+  // Switch to Monad network
   const switchToMonad = async () => {
     try {
       setError(null)
-      await switchChain({ chainId: monadTestnet.id })
+      await switchChain({ chainId: monadTestnetUpdated.id })
     } catch (err) {
-      console.error("Ağ değiştirme hatası:", err)
-      setError("Ağ değiştirilemedi. Lütfen manuel olarak Monad Test Ağına geçiş yapın.")
+      console.error("Network switching error:", err)
+      setError("Failed to switch network. Please manually switch to Monad Test Network.")
     }
   }
 
-  // Cüzdana bağlanma
+  // Connect to wallet
   const handleConnect = async () => {
     try {
       setError(null)
       await connect({ connector: farcasterFrame() })
       if (onConnect) onConnect()
     } catch (err) {
-      console.error("Bağlantı hatası:", err)
-      setError("Cüzdana bağlanırken bir hata oluştu. Lütfen tekrar deneyin.")
+      console.error("Connection error:", err)
+      setError("Failed to connect to wallet. Please try again.")
     }
   }
 
@@ -54,7 +72,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
               disabled={isPending}
               className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md transition-colors mb-2 disabled:opacity-50"
             >
-              {isPending ? "İşlem yapılıyor..." : "Monad Ağına Geç"}
+              {isPending ? "Processing..." : "Switch to Monad Network"}
             </button>
           )}
           <button
@@ -62,7 +80,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
             disabled={isPending}
             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
           >
-            {isPending ? "İşlem yapılıyor..." : "Bağlantıyı Kes"}
+            {isPending ? "Processing..." : "Disconnect"}
           </button>
         </div>
       ) : (
@@ -71,7 +89,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
           disabled={isPending}
           className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
         >
-          {isPending ? "Bağlanıyor..." : "Cüzdana Bağlan"}
+          {isPending ? "Connecting..." : "Connect Wallet"}
         </button>
       )}
 

@@ -2,20 +2,42 @@
 
 import { createConfig, http, WagmiProvider } from "wagmi"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { monadTestnet } from "wagmi/chains"
 import { type ReactNode, useEffect, useState } from "react"
 import { useMobile } from "@/hooks/use-mobile"
 import { sdk } from "@farcaster/frame-sdk"
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
+import type { Chain } from "wagmi"
+
+// Update the Monad testnet chain configuration
+// Find the import for monadTestnet and update it
+
+// Add this constant to define the correct Monad testnet chain
+const monadTestnetUpdated: Chain = {
+  id: 10143,
+  name: "Monad Testnet",
+  network: "monad-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "MONAD",
+    symbol: "MON",
+  },
+  rpcUrls: {
+    public: { http: ["https://testnet-rpc.monad.xyz/"] },
+    default: { http: ["https://testnet-rpc.monad.xyz/"] },
+  },
+  blockExplorers: {
+    default: { name: "MonadExplorer", url: "https://testnet.monadexplorer.com/" },
+  },
+}
 
 // WalletConnect proje kimliği
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""
 
 // Wagmi yapılandırması
 const config = createConfig({
-  chains: [monadTestnet],
+  chains: [monadTestnetUpdated],
   transports: {
-    [monadTestnet.id]: http(),
+    [monadTestnetUpdated.id]: http(),
   },
   connectors: [farcasterFrame()],
 })

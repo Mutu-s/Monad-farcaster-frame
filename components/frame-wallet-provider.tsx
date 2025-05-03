@@ -2,12 +2,31 @@ import type React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
 import { createConfig, http, WagmiProvider } from "wagmi"
-import { monadTestnet } from "wagmi/chains"
+import type { Chain } from "wagmi"
+
+// Add this constant to define the correct Monad testnet chain
+const monadTestnetUpdated: Chain = {
+  id: 10143,
+  name: "Monad Testnet",
+  network: "monad-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "MONAD",
+    symbol: "MON",
+  },
+  rpcUrls: {
+    public: { http: ["https://testnet-rpc.monad.xyz/"] },
+    default: { http: ["https://testnet-rpc.monad.xyz/"] },
+  },
+  blockExplorers: {
+    default: { name: "MonadExplorer", url: "https://testnet.monadexplorer.com/" },
+  },
+}
 
 export const config = createConfig({
-  chains: [monadTestnet],
+  chains: [monadTestnetUpdated],
   transports: {
-    [monadTestnet.id]: http(),
+    [monadTestnetUpdated.id]: http(),
   },
   connectors: [farcasterFrame()],
 })

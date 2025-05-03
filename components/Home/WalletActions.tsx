@@ -2,8 +2,26 @@
 
 import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 import { parseEther } from "viem"
-import { monadTestnet } from "viem/chains"
 import { useAccount, useDisconnect, useSendTransaction, useSwitchChain } from "wagmi"
+import type { Chain } from "wagmi"
+
+const monadTestnetUpdated: Chain = {
+  id: 10143,
+  name: "Monad Testnet",
+  network: "monad-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "MONAD",
+    symbol: "MON",
+  },
+  rpcUrls: {
+    public: { http: ["https://testnet-rpc.monad.xyz/"] },
+    default: { http: ["https://testnet-rpc.monad.xyz/"] },
+  },
+  blockExplorers: {
+    default: { name: "MonadExplorer", url: "https://testnet.monadexplorer.com/" },
+  },
+}
 
 export function WalletActions() {
   const { isEthProviderAvailable } = useMiniAppContext()
@@ -32,7 +50,7 @@ export function WalletActions() {
             <p className="text-sm text-left text-orange-700">
               Chain ID: <span className="bg-orange-200 font-mono text-orange-900 rounded-md p-[4px]">{chainId}</span>
             </p>
-            {chainId === monadTestnet.id ? (
+            {chainId === monadTestnetUpdated.id ? (
               <div className="flex flex-col space-y-2 border border-orange-300 p-4 rounded-md bg-orange-100">
                 <h2 className="text-lg font-semibold text-left text-orange-800">Send Transaction</h2>
                 <button
@@ -53,7 +71,7 @@ export function WalletActions() {
             ) : (
               <button
                 className="bg-orange-500 hover:bg-orange-600 text-white rounded-md p-2 text-sm transition-colors"
-                onClick={() => switchChain({ chainId: monadTestnet.id })}
+                onClick={() => switchChain({ chainId: monadTestnetUpdated.id })}
               >
                 Switch to Monad Testnet
               </button>

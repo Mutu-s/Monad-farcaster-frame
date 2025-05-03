@@ -24,9 +24,10 @@ const PAYMENT_ADDRESS = "0x9EF7b8dd1425B252d9468A53e6c9664da544D516"
 interface PredictionFormProps {
   hasPaid: boolean
   onPaymentSuccess: () => void
+  onResetPayment?: () => void
 }
 
-export default function PredictionForm({ hasPaid, onPaymentSuccess }: PredictionFormProps) {
+export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayment }: PredictionFormProps) {
   const { isAuthenticated, user } = useAuth()
   const [price, setPrice] = useState("")
   const [timeframe, setTimeframe] = useState("1week")
@@ -43,30 +44,30 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   const connectMetaMask = async () => {
     if (typeof window !== "undefined" && window.ethereum) {
       try {
-        // MetaMask'a bağlanma isteği gönder
+        // Request connection to MetaMask
         await window.ethereum.request({ method: "eth_requestAccounts" })
 
-        // Monad Testnet'e geçiş yap
+        // Switch to Monad Testnet
         await window.ethereum
           .request({
             method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x1657" }], // Monad Testnet chain ID (hex)
+            params: [{ chainId: "0x279f" }], // Monad Testnet chain ID (10143 in hex)
           })
           .catch(async (switchError: any) => {
-            // Eğer ağ ekli değilse, ekle
+            // If the network is not added, add it
             if (switchError.code === 4902) {
               await window.ethereum.request({
                 method: "wallet_addEthereumChain",
                 params: [
                   {
-                    chainId: "0x1657",
+                    chainId: "0x279f", // 10143 in hex
                     chainName: "Monad Testnet",
                     nativeCurrency: {
                       name: "MONAD",
                       symbol: "MON",
                       decimals: 18,
                     },
-                    rpcUrls: ["https://rpc.testnet.monad.xyz/"],
+                    rpcUrls: ["https://testnet-rpc.monad.xyz/"],
                     blockExplorerUrls: ["https://testnet.monadexplorer.com/"],
                   },
                 ],
@@ -98,10 +99,10 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   // Handle wallet connection
   const handleConnect = () => {
     if (isMobile) {
-      // Mobil için AppKitButton bileşeni zaten kendi bağlantı mantığını içeriyor
+      // Mobile uses AppKitButton component which has its own connection logic
       return
     } else {
-      // Web için MetaMask bağlantısı
+      // Web uses MetaMask connection
       connectMetaMask()
     }
   }
@@ -200,6 +201,29 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     }
   }
 
+  // Add this after the handleSubmit function
+  useEffect(() => {
+    // If prediction was submitted, show success message for 3 seconds then reset to payment page
+    if (predictionSubmitted) {
+      const timer = setTimeout(() => {
+        // Reset to payment page
+        setPredictionSubmitted(false)
+
+        // Reset payment status
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("bitcoin_prediction_payment_status")
+        }
+
+        // Notify parent component
+        if (onResetPayment) {
+          onResetPayment()
+        }
+      }, 3000) // Show success message for 3 seconds
+
+      return () => clearTimeout(timer)
+    }
+  }, [predictionSubmitted, onResetPayment])
+
   const timeframeOptions = {
     "1day": "1 Day Later",
     "1week": "1 Week Later",
@@ -258,10 +282,10 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
               <div className="w-full">
                 <p className="text-center mb-4 text-[#B8A8FF]">Connect your wallet to continue</p>
                 {isMobile ? (
-                  // Mobil için AppKitButton
+                  // Mobile uses AppKitButton
                   <AppKitButton onConnect={handleConnect} />
                 ) : (
-                  // Web için MetaMask butonu
+                  // Web uses MetaMask button
                   <button
                     onClick={connectMetaMask}
                     style={{
@@ -406,6 +430,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             <p className="text-green-300 mb-4">
               Your Bitcoin price prediction has been successfully recorded. Thank you for participating!
             </p>
+            <p className="text-green-300">Returning to payment page in a moment...</p>
           </div>
 
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">

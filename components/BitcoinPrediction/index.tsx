@@ -33,6 +33,11 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     markPaymentMade()
   }
 
+  // Add this function to reset payment status
+  const resetPaymentStatus = () => {
+    setHasPaid(false)
+  }
+
   useEffect(() => {
     let lastPrice: number | null = null
 
@@ -186,7 +191,11 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         </TabsList>
         <TabsContent value="predict" className="mt-4">
           <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
-            <PredictionForm hasPaid={hasPaid} onPaymentSuccess={handlePaymentSuccess} />
+            <PredictionForm
+              hasPaid={hasPaid}
+              onPaymentSuccess={handlePaymentSuccess}
+              onResetPayment={resetPaymentStatus}
+            />
           </div>
         </TabsContent>
         <TabsContent value="predictions" className="mt-4">

@@ -13,7 +13,7 @@ export default function NetworkSwitcher() {
   if (isCorrectNetwork) {
     return (
       <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-        <span className="block sm:inline">✅ Monad ağına bağlısınız</span>
+        <span className="block sm:inline">✅ You are connected to the Monad network</span>
       </div>
     )
   }
@@ -21,7 +21,7 @@ export default function NetworkSwitcher() {
   return (
     <div className="mb-4">
       <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-2">
-        <span className="block sm:inline">⚠️ Monad ağına bağlı değilsiniz. Lütfen ağı değiştirin.</span>
+        <span className="block sm:inline">⚠️ You are not connected to the Monad network. Please switch networks.</span>
       </div>
 
       <div className="flex flex-col space-y-2">
@@ -30,7 +30,7 @@ export default function NetworkSwitcher() {
           disabled={isPending}
           className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
         >
-          {isPending ? "Ağ değiştiriliyor..." : "Monad Ağına Geç"}
+          {isPending ? "Switching network..." : "Switch to Monad Network"}
         </button>
 
         <button
@@ -38,13 +38,13 @@ export default function NetworkSwitcher() {
           disabled={isPending}
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
         >
-          {isPending ? "Ağ ekleniyor..." : "Monad Ağını Ekle"}
+          {isPending ? "Adding network..." : "Add Monad Network"}
         </button>
       </div>
 
       {networkSwitchError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-2">
-          <span className="block sm:inline">Hata: {networkSwitchError}</span>
+          <span className="block sm:inline">Error: {networkSwitchError}</span>
         </div>
       )}
     </div>

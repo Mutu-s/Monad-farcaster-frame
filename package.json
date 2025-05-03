@@ -58,13 +58,13 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
+    "@tanstack/react-query": "latest",
     "viem": "latest",
     "@wagmi/core": "latest",
     "@farcaster/frame-sdk": "latest",
-    "@tanstack/react-query": "latest",
-    "@farcaster/frame-wagmi-connector": "latest",
-    "wagmi": "latest",
     "@farcaster/frame-core": "latest",
+    "wagmi": "latest",
+    "@farcaster/frame-wagmi-connector": "latest",
     "uuid": "latest"
   },
   "devDependencies": {
