@@ -4,9 +4,11 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ExternalLink, Trophy, User } from "lucide-react"
 import { getWinners } from "@/lib/predictions"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 
 interface Winner {
   id: string
@@ -23,6 +25,7 @@ interface Winner {
 }
 
 export default function WinnersList() {
+  const { actions } = useMiniAppContext()
   const [winners, setWinners] = useState<Winner[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -49,6 +52,16 @@ export default function WinnersList() {
     })
   }
 
+  const handleViewProfile = () => {
+    if (actions) {
+      // If in Farcaster app, use the SDK to open URL
+      actions.openUrl("https://warpcast.com/0xmutu")
+    } else {
+      // Fallback for browser
+      window.open("https://warpcast.com/0xmutu", "_blank")
+    }
+  }
+
   return (
     <Card className="bg-black/40 border border-orange-500/30 text-white backdrop-blur-md">
       <CardHeader>
@@ -58,6 +71,18 @@ export default function WinnersList() {
             <CardDescription className="text-orange-200/70">
               Users who made correct predictions and won rewards
             </CardDescription>
+          </div>
+          <div className="flex items-center">
+            <img src="/images/mutu-logo-new.png" alt="mutu logo" width={30} height={30} className="rounded-full mr-2" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+              onClick={handleViewProfile}
+            >
+              <span>View Profile</span>
+              <ExternalLink size={14} />
+            </Button>
           </div>
         </div>
       </CardHeader>

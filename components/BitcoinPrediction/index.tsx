@@ -9,7 +9,7 @@ import { getCurrentBitcoinPrice } from "@/lib/bitcoin"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, Bitcoin, TrendingUp, Award, Users } from "lucide-react"
+import { ExternalLink, Bitcoin, TrendingUp, Award, Users, Lock } from "lucide-react"
 import RewardInfo from "./RewardInfo"
 import { useAuth } from "@/context/auth-context"
 import { hasAnyPaymentBeenMade, markPaymentMade } from "@/lib/payments"
@@ -31,6 +31,11 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
   const handlePaymentSuccess = () => {
     setHasPaid(true)
     markPaymentMade()
+
+    // Ödeme yapıldıktan sonra sayfayı yenile
+    if (typeof window !== "undefined") {
+      window.location.reload()
+    }
   }
 
   useEffect(() => {
@@ -160,50 +165,78 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-black/50 backdrop-blur-md border border-orange-500/30 p-1 rounded-xl">
-          <TabsTrigger
-            value="predict"
-            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
-          >
-            <TrendingUp size={16} />
-            Predict
-          </TabsTrigger>
-          <TabsTrigger
-            value="predictions"
-            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
-          >
-            <Users size={16} />
-            Predictions
-          </TabsTrigger>
-          <TabsTrigger
-            value="winners"
-            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
-          >
-            <Award size={16} />
-            Winners
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="predict" className="mt-4">
-          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
-            <PredictionForm hasPaid={hasPaid} onPaymentSuccess={handlePaymentSuccess} />
+      {/* Ödeme yapılmadıysa sadece ödeme formunu göster */}
+      {!hasPaid ? (
+        <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30 w-full">
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center mb-4">
+              <Lock className="text-orange-500 mr-2" size={24} />
+              <h2 className="text-2xl font-bold text-orange-500">Unlock Full Access</h2>
+            </div>
+            <p className="text-orange-200 mb-4">
+              Pay 0.1 MON to access Bitcoin price predictions and participate in the contest
+            </p>
+            <div className="p-4 bg-black/30 rounded-lg border border-orange-500/20 mb-4">
+              <p className="text-sm text-orange-300">After payment, you'll be able to:</p>
+              <ul className="text-sm text-orange-200 mt-2 space-y-1 list-disc list-inside">
+                <li>Make Bitcoin price predictions</li>
+                <li>View all community predictions</li>
+                <li>See past winners</li>
+                <li>Win rewards if your prediction is accurate</li>
+              </ul>
+            </div>
           </div>
-        </TabsContent>
-        <TabsContent value="predictions" className="mt-4">
-          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
-            <PredictionsList />
-          </div>
-        </TabsContent>
-        <TabsContent value="winners" className="mt-4">
-          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
-            <WinnersList />
-          </div>
-        </TabsContent>
-      </Tabs>
+          <PredictionForm hasPaid={hasPaid} onPaymentSuccess={handlePaymentSuccess} />
+        </div>
+      ) : (
+        /* Ödeme yapıldıysa tahmin, tahminler ve kazananlar sekmelerini göster */
+        <>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-black/50 backdrop-blur-md border border-orange-500/30 p-1 rounded-xl">
+              <TabsTrigger
+                value="predict"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
+              >
+                <TrendingUp size={16} />
+                Predict
+              </TabsTrigger>
+              <TabsTrigger
+                value="predictions"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
+              >
+                <Users size={16} />
+                Predictions
+              </TabsTrigger>
+              <TabsTrigger
+                value="winners"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg flex items-center gap-2"
+              >
+                <Award size={16} />
+                Winners
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="predict" className="mt-4">
+              <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
+                <PredictionForm hasPaid={hasPaid} onPaymentSuccess={handlePaymentSuccess} />
+              </div>
+            </TabsContent>
+            <TabsContent value="predictions" className="mt-4">
+              <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
+                <PredictionsList />
+              </div>
+            </TabsContent>
+            <TabsContent value="winners" className="mt-4">
+              <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 border border-orange-500/30">
+                <WinnersList />
+              </div>
+            </TabsContent>
+          </Tabs>
 
-      <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 w-full border border-orange-500/30">
-        <RewardInfo />
-      </div>
+          <div className="bg-black/40 backdrop-blur-md rounded-xl p-6 w-full border border-orange-500/30">
+            <RewardInfo />
+          </div>
+        </>
+      )}
 
       <footer className="w-full text-center p-6 border-t border-orange-500/30 mt-8 bg-black/40 backdrop-blur-md rounded-xl">
         <div className="flex items-center justify-center mb-4">

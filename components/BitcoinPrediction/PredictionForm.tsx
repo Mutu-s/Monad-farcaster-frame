@@ -3,19 +3,28 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Check } from "lucide-react"
+import { ExternalLink, LineChart, Check } from "lucide-react"
 import { addPrediction } from "@/lib/predictions"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 import { useAuth } from "@/context/auth-context"
-import { incrementPredictionCount } from "@/lib/payments"
+import { useRouter } from "next/navigation"
+import {
+  incrementPredictionCount,
+  getPaymentAmount,
+  isSubsequentPrediction,
+  getPredictionNumber,
+  markPaymentMade,
+  resetPaymentStatus,
+} from "@/lib/payments"
+import { useAppKitAccount } from "../WalletConnection/AppKitProvider"
 import { useSendTransaction } from "wagmi"
 import { parseEther } from "viem"
-import AppKitButton from "../WalletConnection/AppKitButton"
-import { useAccount } from "wagmi"
 
 // Payment address for MON tokens
 const PAYMENT_ADDRESS = "0x9EF7b8dd1425B252d9468A53e6c9664da544D516"
@@ -26,39 +35,75 @@ interface PredictionFormProps {
 }
 
 export default function PredictionForm({ hasPaid, onPaymentSuccess }: PredictionFormProps) {
+  const { actions } = useMiniAppContext()
   const { isAuthenticated, user } = useAuth()
+  const router = useRouter()
   const [price, setPrice] = useState("")
   const [timeframe, setTimeframe] = useState("1week")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { isConnected, address, isCorrectNetwork, switchToMonad, connect } = useAppKitAccount()
   const { sendTransaction, isPending, isSuccess } = useSendTransaction()
-  const { isConnected, address } = useAccount()
+  const [paymentAmount, setPaymentAmount] = useState(getPaymentAmount())
+  const [isSubsequent, setIsSubsequent] = useState(isSubsequentPrediction())
+  const [predictionNumber, setPredictionNumber] = useState(getPredictionNumber())
   const [predictionSubmitted, setPredictionSubmitted] = useState(false)
   const [submittedPrice, setSubmittedPrice] = useState("")
   const [submittedTimeframe, setSubmittedTimeframe] = useState("")
+  const [nextPaymentAmount, setNextPaymentAmount] = useState("0.0")
   const formRef = useRef<HTMLFormElement>(null)
 
-  // Handle wallet connection
-  const handleConnect = () => {
-    // The actual connection is handled by the AppKitButton component
+  // Update next payment amount when prediction is submitted
+  useEffect(() => {
+    if (predictionSubmitted) {
+      // Calculate next payment amount (current + 0.1)
+      const nextAmount = (Number.parseFloat(paymentAmount) + 0.1).toFixed(1)
+      setNextPaymentAmount(nextAmount)
+    }
+  }, [predictionSubmitted, paymentAmount])
+
+  // Handle payment
+  const handlePayment = () => {
+    if (!isConnected || !isCorrectNetwork) return
+
+    // If this is for a next prediction after submission
+    if (predictionSubmitted) {
+      sendTransaction({
+        to: PAYMENT_ADDRESS,
+        value: parseEther(nextPaymentAmount),
+      })
+    } else {
+      // Regular payment before prediction
+      sendTransaction({
+        to: PAYMENT_ADDRESS,
+        value: parseEther(paymentAmount),
+      })
+    }
   }
 
   // Handle payment success
   useEffect(() => {
-    if (isSuccess && !hasPaid) {
-      // Regular payment success
-      onPaymentSuccess()
+    if (isSuccess) {
+      if (predictionSubmitted) {
+        // If payment was for next prediction, reset form and update states
+        resetPaymentStatus() // Reset payment status to require new payment
+        markPaymentMade() // Mark as paid for the new prediction
+        setPredictionSubmitted(false) // Reset submission state
+
+        // Update prediction number and payment amount for the next prediction
+        setPredictionNumber(getPredictionNumber())
+        setPaymentAmount(getPaymentAmount())
+
+        // Show success message
+        toast({
+          title: "Payment Successful",
+          description: "You can now make your next prediction.",
+        })
+      } else if (!hasPaid) {
+        // Regular payment success
+        onPaymentSuccess()
+      }
     }
-  }, [isSuccess, hasPaid, onPaymentSuccess])
-
-  // Handle payment
-  const handlePayment = () => {
-    if (!isConnected) return
-
-    sendTransaction({
-      to: PAYMENT_ADDRESS,
-      value: parseEther("0.1"),
-    })
-  }
+  }, [isSuccess, hasPaid, predictionSubmitted, onPaymentSuccess])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,13 +114,14 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
         description: "Please connect your wallet to make predictions.",
         variant: "destructive",
       })
+      connect() // Start wallet connection
       return
     }
 
     if (!hasPaid) {
       toast({
         title: "Payment Required",
-        description: "You must send 0.1 MON to participate in the prediction contest.",
+        description: "You must send MON to participate in the prediction contest.",
         variant: "destructive",
       })
       return
@@ -136,6 +182,16 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     }
   }
 
+  const handleViewProfile = () => {
+    if (actions) {
+      // If in Farcaster app, use the SDK to open URL
+      actions.openUrl("https://warpcast.com/0xmutu")
+    } else {
+      // Fallback for browser
+      window.open("https://warpcast.com/0xmutu", "_blank")
+    }
+  }
+
   const timeframeOptions = {
     "1day": "1 Day Later",
     "1week": "1 Week Later",
@@ -179,6 +235,18 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
               Predict the future price of Bitcoin and win rewards
             </p>
           </div>
+          <div className="flex items-center">
+            <img src="/images/mutu-logo-new.png" alt="mutu logo" width={30} height={30} className="rounded-full mr-2" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 border-[#9B6DFF] text-[#9B6DFF] hover:bg-[#9B6DFF] hover:text-white"
+              onClick={handleViewProfile}
+            >
+              <span>View Profile</span>
+              <ExternalLink size={14} />
+            </Button>
+          </div>
         </div>
 
         <div className="flex justify-center mb-6 bg-[#2D2B3B] p-4 rounded-lg">
@@ -186,14 +254,37 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
         </div>
 
         <div className="space-y-6">
+          {isSubsequent && (
+            <div className="p-4 bg-blue-800/30 border border-blue-600 rounded-md">
+              <p className="text-blue-400 text-center">
+                This is your prediction #{predictionNumber}. The fee is set to {paymentAmount} MON.
+              </p>
+            </div>
+          )}
+
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50] text-center">
             <h2 className="text-2xl font-bold text-[#E9E8FF] mb-4">Prediction Fee</h2>
-            <p className="text-[#B8A8FF] mb-6">You need to pay 0.1 MON to make a Bitcoin price prediction</p>
+            <p className="text-[#B8A8FF] mb-6">
+              {isSubsequent
+                ? `Fee for your prediction #${predictionNumber}: ${paymentAmount} MON`
+                : `You need to pay ${paymentAmount} MON to make a Bitcoin price prediction`}
+            </p>
 
             {!isConnected ? (
               <div className="w-full">
                 <p className="text-center mb-4 text-[#B8A8FF]">Connect your wallet to continue</p>
-                <AppKitButton onConnect={handleConnect} />
+                <Button onClick={connect} className="w-full bg-[#9B6DFF] hover:bg-[#8A5CF7] text-white py-3">
+                  Connect Wallet
+                </Button>
+              </div>
+            ) : !isCorrectNetwork ? (
+              <div className="w-full">
+                <div className="p-3 bg-yellow-800/30 border border-yellow-600 rounded-md mb-4">
+                  <p className="text-yellow-400 text-center">Please switch to the Monad Testnet network to continue</p>
+                </div>
+                <Button onClick={switchToMonad} className="w-full bg-[#9B6DFF] hover:bg-[#8A5CF7] text-white py-3">
+                  Switch to Monad Network
+                </Button>
               </div>
             ) : (
               <button
@@ -228,7 +319,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
                   }
                 }}
               >
-                {isPending ? "Processing..." : `Pay 0.1 MON Entry Fee`}
+                {isPending ? "Processing..." : `Pay ${paymentAmount} MON Entry Fee`}
               </button>
             )}
           </div>
@@ -248,7 +339,8 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             fontSize: "14px",
           }}
         >
-          Winners with correct predictions will receive rewards based on their accuracy.
+          Winners with correct predictions will receive 1 MONAD for daily predictions and 10 MONAD for weekly
+          predictions.
         </p>
       </div>
     )
@@ -289,6 +381,18 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
           >
             Predict the future price of Bitcoin and win rewards
           </p>
+        </div>
+        <div className="flex items-center">
+          <img src="/images/mutu-logo-new.png" alt="mutu logo" width={30} height={30} className="rounded-full mr-2" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 border-[#9B6DFF] text-[#9B6DFF] hover:bg-[#9B6DFF] hover:text-white"
+            onClick={handleViewProfile}
+          >
+            <span>View Profile</span>
+            <ExternalLink size={14} />
+          </Button>
         </div>
       </div>
 
@@ -419,7 +523,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
           fontSize: "14px",
         }}
       >
-        Winners with correct predictions will receive rewards based on their accuracy.
+        Winners with correct predictions will receive 1 MONAD for daily predictions and 10 MONAD for weekly predictions.
       </p>
 
       <Toaster />

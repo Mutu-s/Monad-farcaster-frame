@@ -3,6 +3,32 @@ const PAYMENT_STATUS_KEY = "bitcoin_prediction_payment_status"
 const PREDICTION_COUNT_KEY = "bitcoin_prediction_count"
 
 /**
+ * Check if a user has paid the entry fee
+ * @param userId The user ID to check
+ * @returns True if the user has paid, false otherwise
+ */
+export function hasUserPaid(userId: string): boolean {
+  // Check local storage as a fallback
+  if (typeof window !== "undefined") {
+    const paymentStatus = localStorage.getItem(PAYMENT_STATUS_KEY)
+    return paymentStatus === "paid"
+  }
+
+  return false
+}
+
+/**
+ * Mark a user as having paid the entry fee
+ * @param userId The user ID to mark as paid
+ */
+export function markUserAsPaid(userId: string): void {
+  // Store in local storage as a fallback
+  if (typeof window !== "undefined") {
+    localStorage.setItem(PAYMENT_STATUS_KEY, "paid")
+  }
+}
+
+/**
  * Check if any payment has been made from this browser
  * @returns True if a payment has been made, false otherwise
  */
@@ -46,22 +72,34 @@ export function incrementPredictionCount(): void {
 }
 
 /**
+ * Get the payment amount based on prediction count
+ * @returns The payment amount in MON
+ */
+export function getPaymentAmount(): string {
+  return "0.1"
+}
+
+/**
+ * Check if this is a subsequent prediction (not the first one)
+ * @returns True if this is a subsequent prediction, false if it's the first
+ */
+export function isSubsequentPrediction(): boolean {
+  return getPredictionCount() > 0
+}
+
+/**
+ * Get the prediction number (1st, 2nd, 3rd, etc.)
+ * @returns The prediction number
+ */
+export function getPredictionNumber(): number {
+  return getPredictionCount() + 1
+}
+
+/**
  * Reset payment status (for testing)
  */
 export function resetPaymentStatus(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(PAYMENT_STATUS_KEY)
   }
-}
-
-/**
- * Mark a specific user as paid (using their ID).  This is a mock implementation.
- * In a real application, this would update a database.
- * @param userId The ID of the user to mark as paid.
- */
-export function markUserAsPaid(userId: string | number): void {
-  // In a real application, you would update a database here.
-  // This is a mock implementation for demonstration purposes.
-  console.log(`Marking user ${userId} as paid. (Mock Implementation)`)
-  markPaymentMade() // Also set the browser-level flag
 }

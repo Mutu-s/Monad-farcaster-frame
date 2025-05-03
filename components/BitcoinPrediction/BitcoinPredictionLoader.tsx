@@ -1,28 +1,41 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import BitcoinPrediction from "."
 import { hasAnyPaymentBeenMade } from "@/lib/payments"
+import BitcoinPrediction from "."
 
 export default function BitcoinPredictionLoader() {
-  const [hasPaid, setHasPaid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasPaid, setHasPaid] = useState(false)
 
+  // Check if user has already paid
   useEffect(() => {
-    // Check if user has already paid
-    const paid = hasAnyPaymentBeenMade()
-    setHasPaid(paid)
-    setIsLoading(false)
+    const checkPaymentStatus = () => {
+      try {
+        const paymentStatus = hasAnyPaymentBeenMade()
+        setHasPaid(paymentStatus)
+      } catch (error) {
+        console.error("Error checking payment status:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkPaymentStatus()
+
+    // Düzenli olarak ödeme durumunu kontrol et
+    const interval = setInterval(checkPaymentStatus, 2000)
+    return () => clearInterval(interval)
   }, [])
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="inline-block w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="ml-4 text-orange-200">Loading Bitcoin Prediction App...</p>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     )
   }
 
+  // Always show the BitcoinPrediction component, payment will be handled inside
   return <BitcoinPrediction initialHasPaid={hasPaid} />
 }
