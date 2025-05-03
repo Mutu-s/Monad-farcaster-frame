@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
 import { monadTestnet } from "wagmi/chains"
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
+import { useMobile } from "@/hooks/use-mobile"
 
 interface AppKitButtonProps {
   onConnect?: () => void
@@ -17,6 +18,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
   const [error, setError] = useState<string | null>(null)
   const isPending = isConnectPending || isSwitchPending
   const isCorrectNetwork = chainId === monadTestnet.id
+  const { isMobile } = useMobile()
 
   // Switch to Monad network
   const switchToMonad = async () => {
@@ -34,25 +36,34 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
     try {
       setError(null)
 
-      // Önce Farcaster Frame connector ile bağlanmayı dene
-      try {
+      // Mobil cihazlarda sadece Farcaster Frame connector kullan
+      if (isMobile) {
         await connect({ connector: farcasterFrame() })
-      } catch (farcasterError) {
-        console.log("Farcaster connection failed, trying injected wallet:", farcasterError)
+      } else {
+        // Masaüstünde önce Farcaster Frame connector ile bağlanmayı dene
+        try {
+          await connect({ connector: farcasterFrame() })
+        } catch (farcasterError) {
+          console.log("Farcaster connection failed, trying injected wallet:", farcasterError)
 
-        // Farcaster bağlantısı başarısız olursa, injected connector (MetaMask) ile dene
-        const injectedConnector = connectors.find((c) => c.id === "injected")
-        if (injectedConnector) {
-          await connect({ connector: injectedConnector })
-        } else {
-          throw new Error("No compatible wallet found")
+          // Farcaster bağlantısı başarısız olursa, injected connector (MetaMask) ile dene
+          const injectedConnector = connectors.find((c) => c.id === "injected")
+          if (injectedConnector) {
+            await connect({ connector: injectedConnector })
+          } else {
+            throw new Error("No compatible wallet found")
+          }
         }
       }
 
       if (onConnect) onConnect()
     } catch (err) {
       console.error("Connection error:", err)
-      setError("An error occurred while connecting to wallet. Please try again.")
+      if (isMobile) {
+        setError("Please open this app in Warpcast to connect your wallet.")
+      } else {
+        setError("An error occurred while connecting to wallet. Please try again.")
+      }
     }
   }
 
@@ -86,7 +97,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
           disabled={isPending}
           className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
         >
-          {isPending ? "Connecting..." : "Connect Wallet"}
+          {isPending ? "Connecting..." : isMobile ? "Connect with Warpcast" : "Connect Wallet"}
         </button>
       )}
 

@@ -45,23 +45,17 @@ export function MobileWalletConnector() {
     }
   }
 
-  // Connect to wallet
+  // Connect to wallet - Mobil cihazlarda sadece Farcaster Frame connector kullan
   const handleConnect = async () => {
     try {
-      // First try to connect with injected connector (MetaMask)
-      const injectedConnector = connectors.find((c) => c.id === "injected")
-      if (injectedConnector) {
-        await connect({ connector: injectedConnector })
-      } else {
-        // If injected connector is not available, try with Farcaster Frame connector
-        await connect({ connector: farcasterFrame() })
-      }
+      // Mobil cihazlarda sadece Farcaster Frame connector kullan
+      await connect({ connector: farcasterFrame() })
     } catch (error) {
       console.error("Connection error:", error)
       toast({
         variant: "destructive",
         title: "Connection Error",
-        description: "An error occurred while connecting to wallet. Please try again.",
+        description: "Please open this app in Warpcast to connect your wallet.",
       })
     }
   }
@@ -90,7 +84,7 @@ export function MobileWalletConnector() {
             disabled={isPending}
             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
           >
-            {isPending ? "Connecting..." : "Connect Wallet"}
+            {isPending ? "Connecting..." : "Connect with Warpcast"}
           </button>
         ) : (
           <div className="flex flex-col gap-2">
