@@ -5,13 +5,13 @@ export async function GET() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://monad.0xhub.xyz"
 
   return NextResponse.json({
-    // Note: You'll need to generate this with the Warpcast Mini App Manifest Tool
-    // using your actual Farcaster account and domain
+    // Real accountAssociation data provided by the user
     accountAssociation: {
-      header: "eyJmaWQiOjEyMzQ1LCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4YWJjZGVmMTIzNDU2Nzg5MCJ9",
-      payload: "eyJkb21haW4iOiJtb25hZC4weGh1Yi54eXoifQ==",
+      header:
+        "eyJmaWQiOjQ1MzY4NSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDJFOEY1NDE0NDcwZTNiZGZCODI4NTZkNkNiYjM2Q2I4QjY4OThENDAifQ",
+      payload: "eyJkb21haW4iOiJtb25hZC4weGh1Yi54eXoifQ",
       signature:
-        "MHgxMjM0NTY3ODkwYWJjZGVmMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3ODkwYWJjZGVmMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3ODkwYWJjZGVmMTIzNDU2Nzg5MGFiY2RlZg==",
+        "MHgxOGNmOGFkYjFlZDVlZDIwMTQ2YzI2ZmVlY2U1NTY4YjNiYTJmYjk5ZjA5NWQ0NzY5ZDFjNzRmZjk3OWIzMTA4NmIyY2YwMDExNzBhM2ZlMjFlMWE1M2QzYjI5Mzc3OWFhN2Q3YTUxZmQwZGM3ODlhOGY3NDg3ZmU2OThjMGQwZTFi",
     },
     frame: {
       version: "1",
