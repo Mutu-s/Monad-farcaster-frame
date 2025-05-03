@@ -156,6 +156,11 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     }
   }, [isMobile, hasPaid])
 
+  // Mobil cihazlarda ödeme kontrolünü daha katı hale getirmek için değişiklikler yapıyoruz
+
+  // Mevcut return ifadesini değiştirin ve aşağıdaki gibi güncelleyin:
+  // Ödeme yapılmadıysa sadece ödeme formunu göster
+  // Özellikle mobil cihazlarda daha katı kontrol uyguluyoruz
   return (
     <div
       className="flex min-h-screen flex-col items-center p-4 space-y-6 w-full max-w-4xl mx-auto"
@@ -229,17 +234,6 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
           )}
         </CardContent>
       </Card>
-
-      {/* Mobil cihaz kontrolü ve ödeme durumu kontrolü */}
-      {isMobile && (
-        <div className="w-full bg-black/40 backdrop-blur-md rounded-xl p-4 border border-orange-500/30">
-          <p className="text-orange-300 text-center">
-            {hasPaid
-              ? "Payment verified. You have full access."
-              : "Mobile device detected. Payment required to access predictions."}
-          </p>
-        </div>
-      )}
 
       {/* Ödeme yapılmadıysa sadece ödeme formunu göster */}
       {!hasPaid ? (

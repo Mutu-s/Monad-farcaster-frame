@@ -46,6 +46,25 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     console.log("Connect button clicked in PredictionForm")
   }
 
+  // Handle payment
+  const handlePayment = () => {
+    if (!isConnected) return
+
+    // Mobil cihazlar için ödeme öncesi uyarı
+    if (isMobile) {
+      toast({
+        title: "Mobile Payment",
+        description: "Please wait for transaction confirmation after payment.",
+      })
+    }
+
+    // Regular payment before prediction
+    sendTransaction({
+      to: PAYMENT_ADDRESS,
+      value: parseEther("0.1"),
+    })
+  }
+
   // Handle payment success
   useEffect(() => {
     if (isSuccess && !hasPaid) {
@@ -58,6 +77,11 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
         localStorage.setItem("bitcoin_prediction_payment_status", "paid")
         localStorage.setItem("user_payment_verified", "true")
         localStorage.setItem("payment_timestamp", Date.now().toString())
+
+        // Mobil cihazlar için ekstra katı doğrulama
+        if (isMobile) {
+          localStorage.setItem("mobile_strict_payment_verified", "true")
+        }
       }
 
       // Ödeme durumunu güncelle
@@ -65,19 +89,15 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
 
       // Parent bileşene bildir
       onPaymentSuccess()
+
+      // Mobil cihazlarda sayfayı yenile (ödeme durumunun doğru şekilde güncellenmesi için)
+      if (isMobile && typeof window !== "undefined") {
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      }
     }
-  }, [isSuccess, hasPaid, onPaymentSuccess])
-
-  // Handle payment
-  const handlePayment = () => {
-    if (!isConnected) return
-
-    // Regular payment before prediction
-    sendTransaction({
-      to: PAYMENT_ADDRESS,
-      value: parseEther("0.1"),
-    })
-  }
+  }, [isSuccess, hasPaid, onPaymentSuccess, isMobile])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

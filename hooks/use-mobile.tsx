@@ -9,6 +9,10 @@ export function useMobile() {
   useEffect(() => {
     // Mobile device detection
     const checkMobile = () => {
+      if (typeof window === "undefined" || typeof navigator === "undefined") {
+        return false
+      }
+
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
 
       // iOS detection
@@ -23,12 +27,33 @@ export function useMobile() {
       // Screen width check
       const isSmallScreen = window.innerWidth <= 768
 
-      setIsMobile(isIOS || isAndroid || isMobileCheck || isSmallScreen)
+      // Farcaster app detection (additional check)
+      const isFarcasterApp = userAgent.includes("Farcaster") || userAgent.includes("Warpcast")
+
+      // Store mobile status in localStorage for consistent detection
+      const mobileDetected = isIOS || isAndroid || isMobileCheck || isSmallScreen || isFarcasterApp
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("is_mobile_device", mobileDetected ? "true" : "false")
+      }
+
+      setIsMobile(mobileDetected)
       setIsMobileChecked(true)
+
+      return mobileDetected
     }
 
     if (typeof window !== "undefined") {
-      checkMobile()
+      // First check localStorage for cached result
+      const cachedMobileStatus = localStorage.getItem("is_mobile_device")
+
+      if (cachedMobileStatus) {
+        setIsMobile(cachedMobileStatus === "true")
+        setIsMobileChecked(true)
+      } else {
+        checkMobile()
+      }
+
       window.addEventListener("resize", checkMobile)
     }
 

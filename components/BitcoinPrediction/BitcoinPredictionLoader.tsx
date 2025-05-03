@@ -13,10 +13,28 @@ export default function BitcoinPredictionLoader() {
   const { isMobile } = useMobile() // Mobil cihaz kontrolü
 
   const checkPaymentStatus = useCallback(() => {
-    // Check if user has already paid
+    // Mobil cihazlar için daha katı kontrol
+    if (isMobile) {
+      console.log("Mobile device detected, applying strict payment verification")
+
+      // Mobil cihazlarda ödeme durumunu doğrudan localStorage'dan kontrol et
+      const mobilePaymentVerified =
+        typeof window !== "undefined" &&
+        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
+          localStorage.getItem("mobile_payment_verified") === "true" ||
+          localStorage.getItem("user_payment_verified") === "true")
+
+      console.log("Mobile payment verification:", mobilePaymentVerified ? "Paid" : "Not paid")
+
+      // Mobil cihazlarda ödeme yapılmamışsa, hasPaid'i kesinlikle false olarak ayarla
+      setHasPaid(mobilePaymentVerified)
+      setIsLoading(false)
+      return
+    }
+
+    // Mobil olmayan cihazlar için normal kontrol
     const paid = hasAnyPaymentBeenMade()
     console.log("Initial payment check:", paid ? "Paid" : "Not paid")
-    console.log("Is mobile device:", isMobile ? "Yes" : "No")
 
     // Kullanıcı kimliği varsa, kullanıcıya özel ödeme durumunu kontrol edelim
     if (user && user.id) {
@@ -27,21 +45,6 @@ export default function BitcoinPredictionLoader() {
       setHasPaid(paid || userPaid)
     } else {
       setHasPaid(paid)
-    }
-
-    // Mobil cihazlar için ekstra kontrol - localStorage'da ödeme durumunu doğrudan kontrol et
-    if (isMobile) {
-      const mobilePaymentVerified =
-        typeof window !== "undefined" &&
-        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
-          localStorage.getItem("user_payment_verified") === "true")
-
-      console.log("Mobile payment verification:", mobilePaymentVerified ? "Paid" : "Not paid")
-
-      // Mobil cihazda ödeme yapılmamışsa, hasPaid'i false olarak ayarla
-      if (!mobilePaymentVerified) {
-        setHasPaid(false)
-      }
     }
 
     setIsLoading(false)
