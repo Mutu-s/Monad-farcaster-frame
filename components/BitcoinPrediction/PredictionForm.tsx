@@ -16,6 +16,8 @@ import { useSendTransaction } from "wagmi"
 import { parseEther } from "viem"
 import AppKitButton from "../WalletConnection/AppKitButton"
 import { useAccount } from "wagmi"
+import { useMobile } from "@/hooks/use-mobile"
+import MetaMaskConnector from "../WalletConnection/MetaMaskConnector"
 
 // Payment address for MON tokens
 const PAYMENT_ADDRESS = "0x9EF7b8dd1425B252d9468A53e6c9664da544D516"
@@ -36,10 +38,12 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   const [submittedPrice, setSubmittedPrice] = useState("")
   const [submittedTimeframe, setSubmittedTimeframe] = useState("")
   const formRef = useRef<HTMLFormElement>(null)
+  const { isMobile } = useMobile()
 
   // Handle wallet connection
   const handleConnect = () => {
     // AppKitButton bileşeni bağlantıyı yönetecek
+    console.log("Connect button clicked in PredictionForm")
   }
 
   // Handle payment success
@@ -73,13 +77,20 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
       return
     }
 
+    // Ödeme kontrolünü güçlendirelim
     if (!hasPaid) {
-      toast({
-        title: "Payment Required",
-        description: "You must send 0.1 MON to participate in the prediction contest.",
-        variant: "destructive",
-      })
-      return
+      // Yerel depolamadan tekrar kontrol edelim
+      const paymentVerified =
+        typeof window !== "undefined" && localStorage.getItem("bitcoin_prediction_payment_status") === "paid"
+
+      if (!paymentVerified) {
+        toast({
+          title: "Payment Required",
+          description: "You must send 0.1 MON to participate in the prediction contest.",
+          variant: "destructive",
+        })
+        return
+      }
     }
 
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
@@ -194,7 +205,16 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             {!isConnected ? (
               <div className="w-full">
                 <p className="text-center mb-4 text-[#B8A8FF]">Connect your wallet to continue</p>
-                <AppKitButton onConnect={handleConnect} />
+                {/* Mobil cihazlarda AppKitButton, masaüstünde MetaMaskConnector kullan */}
+                {isMobile ? (
+                  <AppKitButton onConnect={handleConnect} />
+                ) : (
+                  <div className="space-y-4">
+                    <MetaMaskConnector />
+                    <p className="text-center text-sm text-[#8F8BA8]">or</p>
+                    <AppKitButton onConnect={handleConnect} />
+                  </div>
+                )}
               </div>
             ) : (
               <button

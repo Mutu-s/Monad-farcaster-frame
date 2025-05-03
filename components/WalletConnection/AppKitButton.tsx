@@ -49,9 +49,15 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
           // Farcaster bağlantısı başarısız olursa, injected connector (MetaMask) ile dene
           const injectedConnector = connectors.find((c) => c.id === "injected")
           if (injectedConnector) {
-            await connect({ connector: injectedConnector })
+            try {
+              console.log("Trying to connect with injected connector:", injectedConnector)
+              await connect({ connector: injectedConnector })
+            } catch (injectedError) {
+              console.error("Injected connector error:", injectedError)
+              throw new Error("Failed to connect with MetaMask. Please make sure MetaMask is installed and unlocked.")
+            }
           } else {
-            throw new Error("No compatible wallet found")
+            throw new Error("MetaMask not found. Please install MetaMask extension.")
           }
         }
       }
@@ -62,7 +68,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
       if (isMobile) {
         setError("Please open this app in Warpcast to connect your wallet.")
       } else {
-        setError("An error occurred while connecting to wallet. Please try again.")
+        setError(err instanceof Error ? err.message : "An error occurred while connecting to wallet. Please try again.")
       }
     }
   }

@@ -11,6 +11,7 @@ export default function BitcoinPredictionLoader() {
   useEffect(() => {
     // Check if user has already paid
     const paid = hasAnyPaymentBeenMade()
+    console.log("Initial payment check:", paid ? "Paid" : "Not paid")
     setHasPaid(paid)
     setIsLoading(false)
   }, [])

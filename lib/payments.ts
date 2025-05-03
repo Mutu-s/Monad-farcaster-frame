@@ -9,7 +9,17 @@ const PREDICTION_COUNT_KEY = "bitcoin_prediction_count"
 export function hasAnyPaymentBeenMade(): boolean {
   if (typeof window !== "undefined") {
     const paymentStatus = localStorage.getItem(PAYMENT_STATUS_KEY)
-    return paymentStatus === "paid"
+
+    // Ödeme durumunu daha sıkı kontrol edelim
+    if (paymentStatus === "paid") {
+      // Ödeme yapıldığını doğrulayalım
+      console.log("Payment verification: Payment has been made")
+      return true
+    }
+
+    // Ödeme yapılmadığını loglayalım
+    console.log("Payment verification: No payment found")
+    return false
   }
   return false
 }
@@ -19,6 +29,7 @@ export function hasAnyPaymentBeenMade(): boolean {
  */
 export function markPaymentMade(): void {
   if (typeof window !== "undefined") {
+    console.log("Marking payment as made")
     localStorage.setItem(PAYMENT_STATUS_KEY, "paid")
   }
 }

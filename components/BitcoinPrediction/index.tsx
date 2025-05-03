@@ -67,11 +67,17 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
   useEffect(() => {
     const checkPaymentStatus = () => {
       const paid = hasAnyPaymentBeenMade()
+      console.log("Payment status check:", paid ? "Paid" : "Not paid")
       if (paid && !hasPaid) {
+        console.log("Updating payment status to paid")
         setHasPaid(true)
       }
     }
 
+    // İlk yükleme sırasında hemen kontrol et
+    checkPaymentStatus()
+
+    // Sonra düzenli olarak kontrol et
     const interval = setInterval(checkPaymentStatus, 2000)
     return () => clearInterval(interval)
   }, [hasPaid])
