@@ -16,6 +16,7 @@ import { useSendTransaction } from "wagmi"
 import { parseEther } from "viem"
 import AppKitButton from "../WalletConnection/AppKitButton"
 import { useAccount } from "wagmi"
+import { useMobile } from "@/hooks/use-mobile"
 
 // Payment address for MON tokens
 const PAYMENT_ADDRESS = "0x9EF7b8dd1425B252d9468A53e6c9664da544D516"
@@ -36,10 +37,73 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   const [submittedPrice, setSubmittedPrice] = useState("")
   const [submittedTimeframe, setSubmittedTimeframe] = useState("")
   const formRef = useRef<HTMLFormElement>(null)
+  const { isMobile } = useMobile()
+
+  // Handle wallet connection for web (MetaMask)
+  const connectMetaMask = async () => {
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        // MetaMask'a bağlanma isteği gönder
+        await window.ethereum.request({ method: "eth_requestAccounts" })
+
+        // Monad Testnet'e geçiş yap
+        await window.ethereum
+          .request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x1657" }], // Monad Testnet chain ID (hex)
+          })
+          .catch(async (switchError: any) => {
+            // Eğer ağ ekli değilse, ekle
+            if (switchError.code === 4902) {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  {
+                    chainId: "0x1657",
+                    chainName: "Monad Testnet",
+                    nativeCurrency: {
+                      name: "MONAD",
+                      symbol: "MON",
+                      decimals: 18,
+                    },
+                    rpcUrls: ["https://rpc.testnet.monad.xyz/"],
+                    blockExplorerUrls: ["https://testnet.monadexplorer.com/"],
+                  },
+                ],
+              })
+            }
+          })
+
+        toast({
+          title: "Wallet Connected",
+          description: "MetaMask wallet connected successfully!",
+        })
+      } catch (error) {
+        console.error("MetaMask connection error:", error)
+        toast({
+          title: "Connection Failed",
+          description: "Failed to connect to MetaMask. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } else {
+      toast({
+        title: "MetaMask Not Found",
+        description: "Please install MetaMask extension to connect your wallet.",
+        variant: "destructive",
+      })
+    }
+  }
 
   // Handle wallet connection
   const handleConnect = () => {
-    // The actual connection is handled by the AppKitButton component
+    if (isMobile) {
+      // Mobil için AppKitButton bileşeni zaten kendi bağlantı mantığını içeriyor
+      return
+    } else {
+      // Web için MetaMask bağlantısı
+      connectMetaMask()
+    }
   }
 
   // Handle payment success
@@ -193,7 +257,40 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             {!isConnected ? (
               <div className="w-full">
                 <p className="text-center mb-4 text-[#B8A8FF]">Connect your wallet to continue</p>
-                <AppKitButton onConnect={handleConnect} />
+                {isMobile ? (
+                  // Mobil için AppKitButton
+                  <AppKitButton onConnect={handleConnect} />
+                ) : (
+                  // Web için MetaMask butonu
+                  <button
+                    onClick={connectMetaMask}
+                    style={{
+                      padding: "14px 28px",
+                      fontSize: "16px",
+                      backgroundColor: "#9B6DFF",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "12px",
+                      cursor: "pointer",
+                      fontWeight: "500",
+                      transition: "all 0.2s ease",
+                      width: "100%",
+                      boxShadow: "0 4px 20px rgba(155, 109, 255, 0.3)",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = "#8A5CF7"
+                      e.currentTarget.style.transform = "translateY(-1px)"
+                      e.currentTarget.style.boxShadow = "0 6px 25px rgba(155, 109, 255, 0.4)"
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = "#9B6DFF"
+                      e.currentTarget.style.transform = "translateY(0)"
+                      e.currentTarget.style.boxShadow = "0 4px 20px rgba(155, 109, 255, 0.3)"
+                    }}
+                  >
+                    Connect MetaMask
+                  </button>
+                )}
               </div>
             ) : (
               <button
