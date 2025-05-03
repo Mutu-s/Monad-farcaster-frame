@@ -3,17 +3,20 @@
 import { useEffect, useState, useCallback } from "react"
 import BitcoinPrediction from "."
 import { hasAnyPaymentBeenMade, hasUserPaid } from "@/lib/payments"
-import { useAuth } from "@/context/auth-context" // Düzeltildi: auth -> auth-context
+import { useAuth } from "@/context/auth-context"
+import { useMobile } from "@/hooks/use-mobile" // Mobil kontrolü için eklendi
 
 export default function BitcoinPredictionLoader() {
   const [hasPaid, setHasPaid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useAuth()
+  const { isMobile } = useMobile() // Mobil cihaz kontrolü
 
   const checkPaymentStatus = useCallback(() => {
     // Check if user has already paid
     const paid = hasAnyPaymentBeenMade()
     console.log("Initial payment check:", paid ? "Paid" : "Not paid")
+    console.log("Is mobile device:", isMobile ? "Yes" : "No")
 
     // Kullanıcı kimliği varsa, kullanıcıya özel ödeme durumunu kontrol edelim
     if (user && user.id) {
@@ -26,11 +29,30 @@ export default function BitcoinPredictionLoader() {
       setHasPaid(paid)
     }
 
+    // Mobil cihazlar için ekstra kontrol - localStorage'da ödeme durumunu doğrudan kontrol et
+    if (isMobile) {
+      const mobilePaymentVerified =
+        typeof window !== "undefined" &&
+        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
+          localStorage.getItem("user_payment_verified") === "true")
+
+      console.log("Mobile payment verification:", mobilePaymentVerified ? "Paid" : "Not paid")
+
+      // Mobil cihazda ödeme yapılmamışsa, hasPaid'i false olarak ayarla
+      if (!mobilePaymentVerified) {
+        setHasPaid(false)
+      }
+    }
+
     setIsLoading(false)
-  }, [user])
+  }, [user, isMobile])
 
   useEffect(() => {
     checkPaymentStatus()
+
+    // Düzenli olarak ödeme durumunu kontrol et
+    const interval = setInterval(checkPaymentStatus, 2000)
+    return () => clearInterval(interval)
   }, [checkPaymentStatus])
 
   if (isLoading) {

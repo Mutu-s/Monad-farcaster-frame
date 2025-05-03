@@ -6,12 +6,12 @@ import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Check } from "lucide-react"
+import { LineChart, Check, AlertTriangle } from "lucide-react"
 import { addPrediction } from "@/lib/predictions"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/context/auth-context"
-import { incrementPredictionCount } from "@/lib/payments"
+import { incrementPredictionCount, markPaymentMade } from "@/lib/payments"
 import { useSendTransaction } from "wagmi"
 import { parseEther } from "viem"
 import AppKitButton from "../WalletConnection/AppKitButton"
@@ -49,7 +49,21 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   // Handle payment success
   useEffect(() => {
     if (isSuccess && !hasPaid) {
-      // Regular payment success
+      // Ödeme başarılı olduğunda
+      console.log("Payment successful, updating status")
+
+      // Mobil cihazlar için ekstra doğrulama
+      if (typeof window !== "undefined") {
+        localStorage.setItem("mobile_payment_verified", "true")
+        localStorage.setItem("bitcoin_prediction_payment_status", "paid")
+        localStorage.setItem("user_payment_verified", "true")
+        localStorage.setItem("payment_timestamp", Date.now().toString())
+      }
+
+      // Ödeme durumunu güncelle
+      markPaymentMade()
+
+      // Parent bileşene bildir
       onPaymentSuccess()
     }
   }, [isSuccess, hasPaid, onPaymentSuccess])
@@ -81,7 +95,10 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     if (!hasPaid) {
       // Yerel depolamadan tekrar kontrol edelim
       const paymentVerified =
-        typeof window !== "undefined" && localStorage.getItem("bitcoin_prediction_payment_status") === "paid"
+        typeof window !== "undefined" &&
+        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
+          localStorage.getItem("mobile_payment_verified") === "true" ||
+          localStorage.getItem("user_payment_verified") === "true")
 
       if (!paymentVerified) {
         toast({
@@ -96,7 +113,10 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     // Mobil cihazlar için ekstra kontrol
     if (isMobile && !hasPaid) {
       const paymentVerified =
-        typeof window !== "undefined" && localStorage.getItem("bitcoin_prediction_payment_status") === "paid"
+        typeof window !== "undefined" &&
+        (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
+          localStorage.getItem("mobile_payment_verified") === "true" ||
+          localStorage.getItem("user_payment_verified") === "true")
 
       if (!paymentVerified) {
         toast({
@@ -127,7 +147,9 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
       if (
         !hasPaid &&
         typeof window !== "undefined" &&
-        localStorage.getItem("bitcoin_prediction_payment_status") !== "paid"
+        localStorage.getItem("bitcoin_prediction_payment_status") !== "paid" &&
+        localStorage.getItem("mobile_payment_verified") !== "true" &&
+        localStorage.getItem("user_payment_verified") !== "true"
       ) {
         toast({
           title: "Payment Verification Failed",
@@ -222,6 +244,20 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             </p>
           </div>
         </div>
+
+        {/* Mobil cihaz uyarısı */}
+        {isMobile && (
+          <div className="mb-6 p-4 bg-amber-900/30 border border-amber-600/30 rounded-lg flex items-start gap-3">
+            <AlertTriangle className="text-amber-500 h-5 w-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-amber-400 font-medium mb-1">Mobile Device Detected</h3>
+              <p className="text-amber-300 text-sm">
+                To ensure proper payment verification on mobile, please make sure to complete the payment process and
+                wait for confirmation.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-center mb-6 bg-[#2D2B3B] p-4 rounded-lg">
           <LineChart size={200} className="text-[#9B6DFF]" strokeWidth={1.5} />

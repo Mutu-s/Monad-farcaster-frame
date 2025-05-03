@@ -10,9 +10,10 @@ export function hasAnyPaymentBeenMade(): boolean {
   if (typeof window !== "undefined") {
     const paymentStatus = localStorage.getItem(PAYMENT_STATUS_KEY)
     const userPaymentStatus = localStorage.getItem("user_payment_verified")
+    const mobilePaymentStatus = localStorage.getItem("mobile_payment_verified")
 
     // Ödeme durumunu daha sıkı kontrol edelim
-    if (paymentStatus === "paid" || userPaymentStatus === "true") {
+    if (paymentStatus === "paid" || userPaymentStatus === "true" || mobilePaymentStatus === "true") {
       // Ödeme yapıldığını doğrulayalım
       console.log("Payment verification: Payment has been made")
       return true
@@ -33,6 +34,7 @@ export function markPaymentMade(): void {
     console.log("Marking payment as made")
     localStorage.setItem(PAYMENT_STATUS_KEY, "paid")
     localStorage.setItem("user_payment_verified", "true")
+    localStorage.setItem("mobile_payment_verified", "true")
 
     // Ödeme zamanını da kaydedelim
     localStorage.setItem("payment_timestamp", Date.now().toString())
@@ -67,6 +69,9 @@ export function incrementPredictionCount(): void {
 export function resetPaymentStatus(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(PAYMENT_STATUS_KEY)
+    localStorage.removeItem("user_payment_verified")
+    localStorage.removeItem("mobile_payment_verified")
+    localStorage.removeItem("payment_timestamp")
   }
 }
 

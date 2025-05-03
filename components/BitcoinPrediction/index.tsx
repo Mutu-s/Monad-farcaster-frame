@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button"
 import { ExternalLink, Bitcoin, TrendingUp, Award, Users } from "lucide-react"
 import RewardInfo from "./RewardInfo"
 import { useAuth } from "@/context/auth-context"
-import { hasAnyPaymentBeenMade, markPaymentMade, hasUserPaid } from "@/lib/payments" // Düzeltildi: hasUserPaid'i lib/payments'den import ediyoruz
+import { hasAnyPaymentBeenMade, markPaymentMade, hasUserPaid } from "@/lib/payments"
+import { useMobile } from "@/hooks/use-mobile" // Mobil kontrolü için eklendi
 
 interface BitcoinPredictionProps {
   initialHasPaid: boolean
@@ -26,11 +27,18 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
   const [activeTab, setActiveTab] = useState("predict")
   const [priceChange, setPriceChange] = useState<{ value: number; isPositive: boolean } | null>(null)
   const [hasPaid, setHasPaid] = useState(initialHasPaid)
+  const { isMobile } = useMobile() // Mobil cihaz kontrolü
 
   // Function to update payment status
   const handlePaymentSuccess = () => {
     setHasPaid(true)
     markPaymentMade()
+
+    // Mobil cihazlar için ekstra doğrulama
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mobile_payment_verified", "true")
+      localStorage.setItem("payment_timestamp", Date.now().toString())
+    }
   }
 
   useEffect(() => {
@@ -83,6 +91,27 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         console.log("Updating payment status to paid")
         setHasPaid(true)
       }
+
+      // Mobil cihazlar için ekstra kontrol
+      if (isMobile) {
+        // Mobil cihazlarda ödeme durumunu doğrudan localStorage'dan kontrol et
+        const mobilePaymentVerified =
+          typeof window !== "undefined" &&
+          (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
+            localStorage.getItem("mobile_payment_verified") === "true" ||
+            localStorage.getItem("user_payment_verified") === "true")
+
+        console.log("Mobile payment verification in component:", mobilePaymentVerified ? "Paid" : "Not paid")
+
+        // Mobil cihazda ödeme yapılmamışsa, hasPaid'i false olarak ayarla
+        if (!mobilePaymentVerified && hasPaid) {
+          console.log("Mobile payment not verified, setting hasPaid to false")
+          setHasPaid(false)
+        } else if (mobilePaymentVerified && !hasPaid) {
+          console.log("Mobile payment verified, setting hasPaid to true")
+          setHasPaid(true)
+        }
+      }
     }
 
     // İlk yükleme sırasında hemen kontrol et
@@ -91,7 +120,7 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     // Sonra düzenli olarak kontrol et
     const interval = setInterval(checkPaymentStatus, 2000)
     return () => clearInterval(interval)
-  }, [hasPaid, user])
+  }, [hasPaid, user, isMobile])
 
   const handleViewProfile = () => {
     if (actions) {
@@ -102,6 +131,30 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
       window.open("https://warpcast.com/0xmutu", "_blank")
     }
   }
+
+  // Mobil cihazlar için ödeme durumunu zorla kontrol et
+  useEffect(() => {
+    if (isMobile) {
+      const forceCheckMobilePayment = () => {
+        const mobilePaymentVerified =
+          typeof window !== "undefined" &&
+          (localStorage.getItem("bitcoin_prediction_payment_status") === "paid" ||
+            localStorage.getItem("mobile_payment_verified") === "true" ||
+            localStorage.getItem("user_payment_verified") === "true")
+
+        console.log("Force checking mobile payment:", mobilePaymentVerified ? "Paid" : "Not paid")
+
+        if (!mobilePaymentVerified && hasPaid) {
+          console.log("Force setting hasPaid to false for mobile")
+          setHasPaid(false)
+        }
+      }
+
+      forceCheckMobilePayment()
+      const interval = setInterval(forceCheckMobilePayment, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [isMobile, hasPaid])
 
   return (
     <div
@@ -176,6 +229,17 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
           )}
         </CardContent>
       </Card>
+
+      {/* Mobil cihaz kontrolü ve ödeme durumu kontrolü */}
+      {isMobile && (
+        <div className="w-full bg-black/40 backdrop-blur-md rounded-xl p-4 border border-orange-500/30">
+          <p className="text-orange-300 text-center">
+            {hasPaid
+              ? "Payment verified. You have full access."
+              : "Mobile device detected. Payment required to access predictions."}
+          </p>
+        </div>
+      )}
 
       {/* Ödeme yapılmadıysa sadece ödeme formunu göster */}
       {!hasPaid ? (
