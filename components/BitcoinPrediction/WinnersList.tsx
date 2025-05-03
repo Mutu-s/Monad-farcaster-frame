@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, User } from "lucide-react"
 import { getWinners } from "@/lib/predictions"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 
 interface Winner {
   id: string
@@ -23,6 +24,7 @@ interface Winner {
 }
 
 export default function WinnersList() {
+  const { actions } = useMiniAppContext()
   const [winners, setWinners] = useState<Winner[]>([])
   const [isLoading, setIsLoading] = useState(true)
 

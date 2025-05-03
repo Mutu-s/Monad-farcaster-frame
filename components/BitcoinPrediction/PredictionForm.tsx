@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -12,10 +13,9 @@ import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/context/auth-context"
 import { incrementPredictionCount } from "@/lib/payments"
+import { useAppKitAccount } from "../WalletConnection/AppKitProvider"
 import { useSendTransaction } from "wagmi"
 import { parseEther } from "viem"
-import AppKitButton from "../WalletConnection/AppKitButton"
-import { useAccount } from "wagmi"
 
 // Payment address for MON tokens
 const PAYMENT_ADDRESS = "0x9EF7b8dd1425B252d9468A53e6c9664da544D516"
@@ -30,16 +30,23 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
   const [price, setPrice] = useState("")
   const [timeframe, setTimeframe] = useState("1week")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { isConnected, isCorrectNetwork, switchToMonad, connect } = useAppKitAccount()
   const { sendTransaction, isPending, isSuccess } = useSendTransaction()
-  const { isConnected, address } = useAccount()
+  const [paymentAmount, setPaymentAmount] = useState("0.1")
   const [predictionSubmitted, setPredictionSubmitted] = useState(false)
   const [submittedPrice, setSubmittedPrice] = useState("")
   const [submittedTimeframe, setSubmittedTimeframe] = useState("")
   const formRef = useRef<HTMLFormElement>(null)
 
-  // Handle wallet connection
-  const handleConnect = () => {
-    // The actual connection is handled by the AppKitButton component
+  // Handle payment
+  const handlePayment = () => {
+    if (!isConnected || !isCorrectNetwork) return
+
+    // Regular payment before prediction
+    sendTransaction({
+      to: PAYMENT_ADDRESS,
+      value: parseEther("0.1"),
+    })
   }
 
   // Handle payment success
@@ -50,16 +57,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     }
   }, [isSuccess, hasPaid, onPaymentSuccess])
 
-  // Handle payment
-  const handlePayment = () => {
-    if (!isConnected) return
-
-    sendTransaction({
-      to: PAYMENT_ADDRESS,
-      value: parseEther("0.1"),
-    })
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -69,6 +66,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
         description: "Please connect your wallet to make predictions.",
         variant: "destructive",
       })
+      connect() // Start wallet connection
       return
     }
 
@@ -193,7 +191,18 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             {!isConnected ? (
               <div className="w-full">
                 <p className="text-center mb-4 text-[#B8A8FF]">Connect your wallet to continue</p>
-                <AppKitButton onConnect={handleConnect} />
+                <Button onClick={connect} className="w-full bg-[#9B6DFF] hover:bg-[#8A5CF7] text-white py-3">
+                  Connect Wallet
+                </Button>
+              </div>
+            ) : !isCorrectNetwork ? (
+              <div className="w-full">
+                <div className="p-3 bg-yellow-800/30 border border-yellow-600 rounded-md mb-4">
+                  <p className="text-yellow-400 text-center">Please switch to the Monad Testnet network to continue</p>
+                </div>
+                <Button onClick={switchToMonad} className="w-full bg-[#9B6DFF] hover:bg-[#8A5CF7] text-white py-3">
+                  Switch to Monad Network
+                </Button>
               </div>
             ) : (
               <button

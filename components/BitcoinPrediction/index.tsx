@@ -1,15 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 import PredictionForm from "./PredictionForm"
 import PredictionsList from "./PredictionsList"
 import WinnersList from "./WinnersList"
 import { getCurrentBitcoinPrice } from "@/lib/bitcoin"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ExternalLink, Bitcoin, TrendingUp, Award, Users } from "lucide-react"
+import { Bitcoin, TrendingUp, Award, Users } from "lucide-react"
 import RewardInfo from "./RewardInfo"
 import { useAuth } from "@/context/auth-context"
 import { hasAnyPaymentBeenMade, markPaymentMade } from "@/lib/payments"
@@ -19,7 +17,6 @@ interface BitcoinPredictionProps {
 }
 
 export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionProps) {
-  const { actions } = useMiniAppContext()
   const { user } = useAuth()
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -76,16 +73,6 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     return () => clearInterval(interval)
   }, [hasPaid])
 
-  const handleViewProfile = () => {
-    if (actions) {
-      // If in Farcaster app, use the SDK to open URL
-      actions.openUrl("https://warpcast.com/0xmutu")
-    } else {
-      // Fallback for browser
-      window.open("https://warpcast.com/0xmutu", "_blank")
-    }
-  }
-
   return (
     <div
       className="flex min-h-screen flex-col items-center p-4 space-y-6 w-full max-w-4xl mx-auto"
@@ -100,26 +87,13 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-orange-500/5 blur-3xl"></div>
       </div>
 
-      {/* Profile Button - Always visible at the top */}
-      <div className="w-full flex justify-end mb-2">
-        <Button
-          variant="outline"
-          className="flex items-center gap-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
-          onClick={handleViewProfile}
-        >
-          <img src="/images/mutu-logo-new.png" alt="mutu logo" width={24} height={24} className="rounded-full" />
-          <span>View Profile</span>
-          <ExternalLink size={16} />
-        </Button>
-      </div>
-
       <Card className="w-full border-orange-500/30 bg-black/40 backdrop-blur-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-2">
             <div className="relative">
               <img
                 src="/images/mutu-logo-new.png"
-                alt="mutu logo"
+                alt="Bitcoin Prediction"
                 width={80}
                 height={80}
                 className="rounded-full border-2 border-orange-500"
@@ -209,22 +183,13 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         <div className="flex items-center justify-center mb-4">
           <img
             src="/images/mutu-logo-new.png"
-            alt="mutu logo"
+            alt="Bitcoin Prediction"
             width={40}
             height={40}
             className="rounded-full mr-3 border-2 border-orange-500/50"
           />
-          <p className="font-medium text-lg text-orange-500">Developed by @0xmutu</p>
+          <p className="font-medium text-lg text-orange-500">Bitcoin Price Prediction Contest</p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mt-2 flex items-center gap-2 text-orange-500 hover:bg-orange-500/20"
-          onClick={handleViewProfile}
-        >
-          <span>View Profile</span>
-          <ExternalLink size={16} />
-        </Button>
         <p className="text-sm text-orange-300/70 mt-4">
           Bitcoin Price Prediction Contest &copy; {new Date().getFullYear()}
         </p>

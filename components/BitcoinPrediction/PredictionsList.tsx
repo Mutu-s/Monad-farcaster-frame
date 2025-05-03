@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getPredictions } from "@/lib/predictions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TrendingUp, User } from "lucide-react"
+import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 
 interface Prediction {
   id: string
@@ -19,6 +20,7 @@ interface Prediction {
 }
 
 export default function PredictionsList() {
+  const { actions } = useMiniAppContext()
   const [predictions, setPredictions] = useState<Prediction[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
