@@ -1,20 +1,37 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import BitcoinPrediction from "."
-import { hasAnyPaymentBeenMade } from "@/lib/payments"
+import { hasAnyPaymentBeenMade, hasUserPaid } from "@/lib/payments"
+import { useAuth } from "@/context/auth-context" // Düzeltildi: auth -> auth-context
 
 export default function BitcoinPredictionLoader() {
   const [hasPaid, setHasPaid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuth()
 
-  useEffect(() => {
+  const checkPaymentStatus = useCallback(() => {
     // Check if user has already paid
     const paid = hasAnyPaymentBeenMade()
     console.log("Initial payment check:", paid ? "Paid" : "Not paid")
-    setHasPaid(paid)
+
+    // Kullanıcı kimliği varsa, kullanıcıya özel ödeme durumunu kontrol edelim
+    if (user && user.id) {
+      const userPaid = hasUserPaid(user.id)
+      console.log(`User ${user.id} payment check:`, userPaid ? "Paid" : "Not paid")
+
+      // Kullanıcı ödemişse veya genel ödeme yapılmışsa, ödeme durumunu true olarak ayarlayalım
+      setHasPaid(paid || userPaid)
+    } else {
+      setHasPaid(paid)
+    }
+
     setIsLoading(false)
-  }, [])
+  }, [user])
+
+  useEffect(() => {
+    checkPaymentStatus()
+  }, [checkPaymentStatus])
 
   if (isLoading) {
     return (

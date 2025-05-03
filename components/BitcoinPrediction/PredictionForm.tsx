@@ -77,7 +77,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
       return
     }
 
-    // Ödeme kontrolünü güçlendirelim
+    // Ödeme kontrolünü güçlendirelim - hem hasPaid prop'unu hem de localStorage'ı kontrol edelim
     if (!hasPaid) {
       // Yerel depolamadan tekrar kontrol edelim
       const paymentVerified =
@@ -87,6 +87,21 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
         toast({
           title: "Payment Required",
           description: "You must send 0.1 MON to participate in the prediction contest.",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
+    // Mobil cihazlar için ekstra kontrol
+    if (isMobile && !hasPaid) {
+      const paymentVerified =
+        typeof window !== "undefined" && localStorage.getItem("bitcoin_prediction_payment_status") === "paid"
+
+      if (!paymentVerified) {
+        toast({
+          title: "Payment Required",
+          description: "Mobile users must pay 0.1 MON to participate.",
           variant: "destructive",
         })
         return
@@ -107,6 +122,21 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
     try {
       // Always use local images
       const profilePicture = user?.username === "0xmutu" ? "/images/mutu-logo-new.png" : "/images/default-avatar.png"
+
+      // Ödeme kontrolünü bir kez daha yapalım
+      if (
+        !hasPaid &&
+        typeof window !== "undefined" &&
+        localStorage.getItem("bitcoin_prediction_payment_status") !== "paid"
+      ) {
+        toast({
+          title: "Payment Verification Failed",
+          description: "Please make the required payment before submitting a prediction.",
+          variant: "destructive",
+        })
+        setIsSubmitting(false)
+        return
+      }
 
       await addPrediction({
         userId: user?.id || Math.floor(Math.random() * 100000),
@@ -205,16 +235,8 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess }: Prediction
             {!isConnected ? (
               <div className="w-full">
                 <p className="text-center mb-4 text-[#B8A8FF]">Connect your wallet to continue</p>
-                {/* Mobil cihazlarda AppKitButton, masaüstünde MetaMaskConnector kullan */}
-                {isMobile ? (
-                  <AppKitButton onConnect={handleConnect} />
-                ) : (
-                  <div className="space-y-4">
-                    <MetaMaskConnector />
-                    <p className="text-center text-sm text-[#8F8BA8]">or</p>
-                    <AppKitButton onConnect={handleConnect} />
-                  </div>
-                )}
+                {/* Mobil cihazlarda sadece AppKitButton, masaüstünde sadece MetaMaskConnector kullan */}
+                {isMobile ? <AppKitButton onConnect={handleConnect} /> : <MetaMaskConnector />}
               </div>
             ) : (
               <button

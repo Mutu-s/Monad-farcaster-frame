@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ExternalLink, Bitcoin, TrendingUp, Award, Users } from "lucide-react"
 import RewardInfo from "./RewardInfo"
 import { useAuth } from "@/context/auth-context"
-import { hasAnyPaymentBeenMade, markPaymentMade } from "@/lib/payments"
+import { hasAnyPaymentBeenMade, markPaymentMade, hasUserPaid } from "@/lib/payments" // Düzeltildi: hasUserPaid'i lib/payments'den import ediyoruz
 
 interface BitcoinPredictionProps {
   initialHasPaid: boolean
@@ -68,7 +68,18 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     const checkPaymentStatus = () => {
       const paid = hasAnyPaymentBeenMade()
       console.log("Payment status check:", paid ? "Paid" : "Not paid")
-      if (paid && !hasPaid) {
+
+      // Kullanıcı kimliği varsa, kullanıcıya özel ödeme durumunu kontrol edelim
+      if (user && user.id) {
+        const userPaid = hasUserPaid(user.id)
+        console.log(`User ${user.id} payment check:`, userPaid ? "Paid" : "Not paid")
+
+        // Kullanıcı ödemişse veya genel ödeme yapılmışsa, ödeme durumunu true olarak ayarlayalım
+        if ((paid || userPaid) && !hasPaid) {
+          console.log("Updating payment status to paid")
+          setHasPaid(true)
+        }
+      } else if (paid && !hasPaid) {
         console.log("Updating payment status to paid")
         setHasPaid(true)
       }
@@ -80,7 +91,7 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     // Sonra düzenli olarak kontrol et
     const interval = setInterval(checkPaymentStatus, 2000)
     return () => clearInterval(interval)
-  }, [hasPaid])
+  }, [hasPaid, user])
 
   const handleViewProfile = () => {
     if (actions) {
