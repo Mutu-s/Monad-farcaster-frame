@@ -10,6 +10,7 @@ import { AuthProvider } from "@/context/auth-context" // Add this import
 
 const inter = Inter({ subsets: ["latin"] })
 
+// Farcaster Frame meta etiketlerini güncelle
 export const metadata: Metadata = {
   title: "Bitcoin Price Prediction",
   description: "Predict the future price of Bitcoin and win rewards!",
@@ -17,13 +18,13 @@ export const metadata: Metadata = {
   other: {
     "fc:frame": JSON.stringify({
       version: "next",
-      imageUrl: "https://i.ibb.co/JFthYC2J/7E24DC.png",
+      imageUrl: "https://i.postimg.cc/qvfw4dNs/bitcoin-price-prediction.png",
       button: {
-        title: "Donate",
+        title: "Join",
         action: {
           type: "launch_frame",
           url: process.env.NEXT_PUBLIC_APP_URL || "https://monad-mini-app.vercel.app",
-          name: "Donate",
+          name: "Join",
           splashImageUrl: "https://www.finsmes.com/wp-content/uploads/2024/04/monad.jpeg",
         },
       },

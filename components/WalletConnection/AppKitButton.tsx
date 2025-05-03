@@ -18,35 +18,35 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
   const isPending = isConnectPending || isSwitchPending
   const isCorrectNetwork = chainId === monadTestnet.id
 
-  // Monad ağına geçiş
+  // Switch to Monad network
   const switchToMonad = async () => {
     try {
       setError(null)
       await switchChain({ chainId: monadTestnet.id })
     } catch (err) {
-      console.error("Ağ değiştirme hatası:", err)
-      setError("Ağ değiştirilemedi. Lütfen manuel olarak Monad Test Ağına geçiş yapın.")
+      console.error("Network switching error:", err)
+      setError("Failed to switch network. Please manually switch to Monad Testnet.")
     }
   }
 
-  // Cüzdana bağlanma
+  // Connect to wallet
   const handleConnect = async () => {
     try {
       setError(null)
 
-      // Önce injected connector (MetaMask) ile bağlanmayı dene
+      // First try to connect with injected connector (MetaMask)
       const injectedConnector = connectors.find((c) => c.id === "injected")
       if (injectedConnector) {
         await connect({ connector: injectedConnector })
       } else {
-        // Injected connector yoksa Farcaster Frame connector ile dene
+        // If injected connector is not available, try with Farcaster Frame connector
         await connect({ connector: farcasterFrame() })
       }
 
       if (onConnect) onConnect()
     } catch (err) {
-      console.error("Bağlantı hatası:", err)
-      setError("Cüzdana bağlanırken bir hata oluştu. Lütfen tekrar deneyin.")
+      console.error("Connection error:", err)
+      setError("An error occurred while connecting to wallet. Please try again.")
     }
   }
 
@@ -63,7 +63,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
               disabled={isPending}
               className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md transition-colors mb-2 disabled:opacity-50"
             >
-              {isPending ? "İşlem yapılıyor..." : "Monad Ağına Geç"}
+              {isPending ? "Processing..." : "Switch to Monad Network"}
             </button>
           )}
           <button
@@ -71,7 +71,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
             disabled={isPending}
             className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
           >
-            {isPending ? "İşlem yapılıyor..." : "Bağlantıyı Kes"}
+            {isPending ? "Processing..." : "Disconnect"}
           </button>
         </div>
       ) : (
@@ -80,7 +80,7 @@ export function AppKitButton({ onConnect }: AppKitButtonProps) {
           disabled={isPending}
           className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
         >
-          {isPending ? "Bağlanıyor..." : "Cüzdana Bağlan"}
+          {isPending ? "Connecting..." : "Connect Wallet"}
         </button>
       )}
 

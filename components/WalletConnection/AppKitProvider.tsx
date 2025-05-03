@@ -9,10 +9,10 @@ import { sdk } from "@farcaster/frame-sdk"
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector"
 import { injected } from "wagmi/connectors"
 
-// WalletConnect proje kimliği
+// WalletConnect project ID
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""
 
-// Wagmi yapılandırması
+// Wagmi configuration
 const config = createConfig({
   chains: [monadTestnet],
   transports: {
@@ -20,11 +20,11 @@ const config = createConfig({
   },
   connectors: [
     farcasterFrame(),
-    injected(), // MetaMask ve diğer injected cüzdanlar için
+    injected(), // For MetaMask and other injected wallets
   ],
 })
 
-// React Query istemcisi
+// React Query client
 const queryClient = new QueryClient()
 
 // AppKit Context
@@ -52,18 +52,18 @@ function useAppKitState() {
   }
 }
 
-// AppKitProvider bileşeni
+// AppKitProvider component
 function AppKitProvider({ children }: { children: ReactNode }) {
   const { isMobile } = useMobile()
   const [isFarcasterWallet, setIsFarcasterWallet] = useState(false)
   const appKitState = useAppKitState()
 
-  // Farcaster cüzdan tespiti
+  // Farcaster wallet detection
   useEffect(() => {
     const checkFarcasterWallet = async () => {
       try {
         if (typeof window !== "undefined") {
-          // Farcaster Frame SDK'dan cüzdan bilgisini kontrol et
+          // Check wallet info from Farcaster Frame SDK
           const isFrameContext = await sdk.isFrameContext()
           if (isFrameContext) {
             const ethProvider = await sdk.wallet.ethProvider()
@@ -87,7 +87,7 @@ function AppKitProvider({ children }: { children: ReactNode }) {
         <QueryClientProvider client={queryClient}>
           {isFarcasterWallet && (
             <div className="bg-purple-900/20 text-white p-2 text-sm rounded-md mb-4 text-center">
-              Warpcast cüzdanı tespit edildi. Warpcast cüzdanınızla işlem yapabilirsiniz.
+              Warpcast wallet detected. You can transact with your Warpcast wallet.
             </div>
           )}
           {children}
@@ -97,7 +97,7 @@ function AppKitProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// useAppKitAccount hook'u
+// useAppKitAccount hook
 export function useAppKitAccount() {
   const context = useContext(AppKitContext)
   if (!context) {
@@ -116,5 +116,5 @@ export function useAppKitAccount() {
   }
 }
 
-// Varsayılan dışa aktarım olarak AppKitProvider'ı ekleyelim
+// Export AppKitProvider as default
 export default AppKitProvider

@@ -7,20 +7,20 @@ export function useMobile() {
   const [isMobileChecked, setIsMobileChecked] = useState(false)
 
   useEffect(() => {
-    // Mobil cihaz tespiti
+    // Mobile device detection
     const checkMobile = () => {
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
 
-      // iOS tespiti
+      // iOS detection
       const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream
 
-      // Android tespiti
+      // Android detection
       const isAndroid = /android/i.test(userAgent)
 
-      // Genel mobil tarayıcı tespiti
+      // General mobile browser detection
       const isMobileCheck = /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
 
-      // Ekran genişliği kontrolü
+      // Screen width check
       const isSmallScreen = window.innerWidth <= 768
 
       setIsMobile(isIOS || isAndroid || isMobileCheck || isSmallScreen)
