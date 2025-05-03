@@ -9,10 +9,11 @@ import { getCurrentBitcoinPrice } from "@/lib/bitcoin"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, Bitcoin, TrendingUp, Award, Users } from "lucide-react"
+import { Bitcoin, TrendingUp, Award, Users } from "lucide-react"
 import RewardInfo from "./RewardInfo"
 import { useAuth } from "@/context/auth-context"
 import { hasAnyPaymentBeenMade, markPaymentMade } from "@/lib/payments"
+import { sdk } from "@farcaster/frame-sdk"
 
 interface BitcoinPredictionProps {
   initialHasPaid: boolean
@@ -81,21 +82,14 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
     return () => clearInterval(interval)
   }, [hasPaid])
 
-  const handleViewProfile = () => {
-    if (actions) {
-      // Use the viewProfile SDK method if available
-      try {
-        // FID for 0xmutu - replace with the actual FID if different
-        const mutuFid = 453685
-        actions.viewProfile({ fid: mutuFid })
-        console.log("Viewing profile with FID:", mutuFid)
-      } catch (error) {
-        console.error("Error viewing profile:", error)
-        // Fallback to openUrl if viewProfile fails
-        actions.openUrl("https://warpcast.com/0xmutu")
-      }
-    } else {
-      // Fallback for browser
+  const handleViewProfile = async () => {
+    try {
+      // Using the exact SDK import and function call as shown in the example
+      await sdk.actions.viewProfile({ fid: 453685 })
+      console.log("Viewing profile with FID: 453685")
+    } catch (error) {
+      console.error("Error viewing profile:", error)
+      // Fallback for browser or if SDK fails
       window.open("https://warpcast.com/0xmutu", "_blank")
     }
   }
@@ -118,12 +112,12 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
       <div className="w-full flex justify-end mb-2">
         <Button
           variant="outline"
-          className="flex items-center gap-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+          size="icon"
+          className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
           onClick={handleViewProfile}
+          aria-label="View developer profile"
         >
           <img src="/images/mutu-logo-new.png" alt="mutu logo" width={24} height={24} className="rounded-full" />
-          <span>View Profile</span>
-          <ExternalLink size={16} />
         </Button>
       </div>
 
@@ -236,12 +230,12 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         </div>
         <Button
           variant="ghost"
-          size="sm"
-          className="mt-2 flex items-center gap-2 text-orange-500 hover:bg-orange-500/20"
+          size="icon"
+          className="mt-2 text-orange-500 hover:bg-orange-500/20"
           onClick={handleViewProfile}
+          aria-label="View developer profile"
         >
-          <span>View Profile</span>
-          <ExternalLink size={16} />
+          <img src="/images/mutu-logo-new.png" alt="mutu logo" width={24} height={24} className="rounded-full" />
         </Button>
         <p className="text-sm text-orange-300/70 mt-4">
           Bitcoin Price Prediction Contest &copy; {new Date().getFullYear()}
