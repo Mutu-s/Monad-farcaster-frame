@@ -33,6 +33,9 @@ const monadTestnetUpdated: Chain = {
 // WalletConnect proje kimliği
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""
 
+// Create a new QueryClient instance
+const queryClient = new QueryClient()
+
 // Wagmi yapılandırması
 const config = createConfig({
   chains: [monadTestnetUpdated],
@@ -41,9 +44,6 @@ const config = createConfig({
   },
   connectors: [farcasterFrame()],
 })
-
-// React Query istemcisi
-const queryClient = new QueryClient()
 
 // AppKitProvider bileşeni
 function AppKitProvider({ children }: { children: ReactNode }) {
