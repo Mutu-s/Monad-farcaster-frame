@@ -9,7 +9,7 @@ import { getCurrentBitcoinPrice } from "@/lib/bitcoin"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Bitcoin, TrendingUp, Award, Users } from "lucide-react"
+import { ExternalLink, Bitcoin, TrendingUp, Award, Users } from "lucide-react"
 import RewardInfo from "./RewardInfo"
 import { useAuth } from "@/context/auth-context"
 import { hasAnyPaymentBeenMade, markPaymentMade } from "@/lib/payments"
@@ -112,12 +112,11 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
       <div className="w-full flex justify-end mb-2">
         <Button
           variant="outline"
-          size="icon"
-          className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+          className="flex items-center gap-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
           onClick={handleViewProfile}
-          aria-label="View developer profile"
         >
-          <img src="/images/mutu-logo-new.png" alt="mutu logo" width={24} height={24} className="rounded-full" />
+          <span>View Profile</span>
+          <ExternalLink size={16} />
         </Button>
       </div>
 
@@ -230,12 +229,11 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
         </div>
         <Button
           variant="ghost"
-          size="icon"
-          className="mt-2 text-orange-500 hover:bg-orange-500/20"
+          className="mt-2 flex items-center gap-2 text-orange-500 hover:bg-orange-500/20"
           onClick={handleViewProfile}
-          aria-label="View developer profile"
         >
-          <img src="/images/mutu-logo-new.png" alt="mutu logo" width={24} height={24} className="rounded-full" />
+          <span>View Profile</span>
+          <ExternalLink size={16} />
         </Button>
         <p className="text-sm text-orange-300/70 mt-4">
           Bitcoin Price Prediction Contest &copy; {new Date().getFullYear()}
