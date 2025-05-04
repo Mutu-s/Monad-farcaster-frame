@@ -17,6 +17,7 @@ import { parseEther } from "viem"
 import AppKitButton from "../WalletConnection/AppKitButton"
 import { useAccount } from "wagmi"
 import { useMobile } from "@/hooks/use-mobile"
+import { sdk } from "@farcaster/frame-sdk"
 
 // Payment address for MON tokens
 const PAYMENT_ADDRESS = "0x9EF7b8dd1425B252d9468A53e6c9664da544D516"
@@ -25,6 +26,7 @@ interface PredictionFormProps {
   hasPaid: boolean
   onPaymentSuccess: () => void
   onResetPayment?: () => void
+  onPredictionSubmitted?: () => void
 }
 
 // Function to check if a date is today
@@ -50,7 +52,12 @@ function getTimeUntilMidnight(): string {
   return `${diffHrs}h ${diffMins}m`
 }
 
-export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayment }: PredictionFormProps) {
+export default function PredictionForm({
+  hasPaid,
+  onPaymentSuccess,
+  onResetPayment,
+  onPredictionSubmitted,
+}: PredictionFormProps) {
   const { isAuthenticated, user } = useAuth()
   const [price, setPrice] = useState("")
   const [timeframe, setTimeframe] = useState("1week")
@@ -186,8 +193,18 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
     sendTransaction({
       to: PAYMENT_ADDRESS,
-      value: parseEther("0.1"),
+      value: parseEther("1"),
     })
+  }
+
+  // Handle view profile
+  const handleViewProfile = async () => {
+    try {
+      await sdk.actions.viewProfile({ fid: 453685 })
+    } catch (error) {
+      console.error("Error viewing profile:", error)
+      window.open("https://warpcast.com/0xmutu", "_blank")
+    }
   }
 
   // Modify the handleSubmit function to save the prediction to localStorage with timestamp
@@ -206,7 +223,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
     if (!hasPaid) {
       toast({
         title: "Payment Required",
-        description: "You must send 0.1 MON to participate in the prediction contest.",
+        description: "You must send 1 MON to participate in the prediction contest.",
         variant: "destructive",
       })
       return
@@ -227,7 +244,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       // Always use local images
       const profilePicture = user?.username === "0xmutu" ? "/images/mutu-logo-new.png" : "/images/default-avatar.png"
 
-      await addPrediction({
+      const newPrediction = await addPrediction({
         userId: user?.id || Math.floor(Math.random() * 100000),
         username: user?.username || "Anonymous",
         displayName: user?.displayName || "Anonymous User",
@@ -236,6 +253,8 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         timeframe,
         createdAt: new Date().toISOString(),
       })
+
+      console.log("Prediction added:", newPrediction)
 
       // Increment prediction count
       incrementPredictionCount()
@@ -271,6 +290,11 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
       // Set prediction as submitted
       setPredictionSubmitted(true)
+
+      // Notify parent component that a prediction was submitted
+      if (onPredictionSubmitted) {
+        onPredictionSubmitted()
+      }
 
       // Clear the form
       setPrice("")
@@ -361,7 +385,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         <div className="space-y-6">
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50] text-center">
             <h2 className="text-2xl font-bold text-[#E9E8FF] mb-4">Prediction Fee</h2>
-            <p className="text-[#B8A8FF] mb-6">You need to pay 0.1 MON to make a Bitcoin price prediction</p>
+            <p className="text-[#B8A8FF] mb-6">You need to pay 1 MON to make a Bitcoin price prediction</p>
 
             {!isConnected ? (
               <div className="w-full">
@@ -434,7 +458,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
                   }
                 }}
               >
-                {isPending ? "Processing..." : `Pay 0.1 MON Entry Fee`}
+                {isPending ? "Processing..." : `Pay 1 MON Entry Fee`}
               </button>
             )}
           </div>

@@ -84,8 +84,10 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
 
   const handleViewProfile = async () => {
     try {
-      // Using the exact SDK import and function call as shown in the example
-      await sdk.actions.viewProfile({ fid: 453685 })
+      // Using the exact SDK import and function call syntax from the documentation
+      await sdk.actions.viewProfile({
+        fid: 453685,
+      })
       console.log("Viewing profile with FID: 453685")
     } catch (error) {
       console.error("Error viewing profile:", error)
@@ -197,6 +199,7 @@ export default function BitcoinPrediction({ initialHasPaid }: BitcoinPredictionP
               hasPaid={hasPaid}
               onPaymentSuccess={handlePaymentSuccess}
               onResetPayment={resetPaymentStatus}
+              onPredictionSubmitted={() => setActiveTab("predictions")}
             />
           </div>
         </TabsContent>

@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getPredictions } from "@/lib/predictions"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TrendingUp, User } from "lucide-react"
+import { TrendingUp, User, RefreshCw } from "lucide-react"
 import { useMiniAppContext } from "@/hooks/use-miniapp-context"
+import { Button } from "@/components/ui/button"
 
 interface Prediction {
   id: string
@@ -23,21 +24,29 @@ export default function PredictionsList() {
   const { actions } = useMiniAppContext()
   const [predictions, setPredictions] = useState<Prediction[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  useEffect(() => {
-    const fetchPredictions = async () => {
-      try {
-        const data = await getPredictions()
-        setPredictions(data)
-      } catch (error) {
-        console.error("Error fetching predictions:", error)
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchPredictions = async () => {
+    setIsLoading(true)
+    try {
+      const data = await getPredictions()
+      setPredictions(data)
+      console.log("Fetched predictions:", data)
+    } catch (error) {
+      console.error("Error fetching predictions:", error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
+  // Refresh predictions when component mounts or refreshKey changes
+  useEffect(() => {
     fetchPredictions()
-  }, [])
+  }, [refreshKey])
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1)
+  }
 
   const getTimeframeText = (timeframe: string) => {
     const options: Record<string, string> = {
@@ -48,6 +57,15 @@ export default function PredictionsList() {
     return options[timeframe] || timeframe
   }
 
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleString()
+    } catch (e) {
+      return dateString
+    }
+  }
+
   return (
     <Card className="bg-black/40 border border-orange-500/30 text-white backdrop-blur-md">
       <CardHeader>
@@ -56,6 +74,14 @@ export default function PredictionsList() {
             <CardTitle className="text-orange-500">Recent Predictions</CardTitle>
             <CardDescription className="text-orange-200/70">User predictions for Bitcoin price</CardDescription>
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+          >
+            <RefreshCw size={16} />
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -94,6 +120,7 @@ export default function PredictionsList() {
                 <div className="flex-1">
                   <p className="font-medium text-white">{prediction.displayName}</p>
                   <p className="text-sm text-gray-400">@{prediction.username}</p>
+                  <p className="text-xs text-gray-500">{formatDate(prediction.createdAt)}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-orange-500">${prediction.price.toLocaleString()}</p>

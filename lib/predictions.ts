@@ -19,8 +19,35 @@ export interface Winner extends Prediction {
   reward: string
 }
 
+// Use localStorage to persist predictions between page reloads
+const loadPredictions = (): Prediction[] => {
+  if (typeof window === "undefined") return []
+
+  try {
+    const savedPredictions = localStorage.getItem("bitcoin_predictions")
+    if (savedPredictions) {
+      return JSON.parse(savedPredictions)
+    }
+  } catch (error) {
+    console.error("Error loading predictions from localStorage:", error)
+  }
+
+  return []
+}
+
 // Mock data storage (in a real app, this would be a database)
-let predictions: Prediction[] = []
+let predictions: Prediction[] = loadPredictions()
+
+const savePredictions = () => {
+  if (typeof window === "undefined") return
+
+  try {
+    localStorage.setItem("bitcoin_predictions", JSON.stringify(predictions))
+  } catch (error) {
+    console.error("Error saving predictions to localStorage:", error)
+  }
+}
+
 const winners: Winner[] = [
   {
     id: "1",
@@ -66,39 +93,42 @@ export async function addPrediction(prediction: Omit<Prediction, "id">): Promise
     predictions = predictions.slice(0, 100)
   }
 
+  // Save to localStorage
+  savePredictions()
+
   return newPrediction
 }
 
 // Get all predictions (sorted by newest first)
 export async function getPredictions(): Promise<Prediction[]> {
-  // In a real app, we would fetch from a database
-  // For demo purposes, return some mock data if no predictions exist
-  if (predictions.length === 0) {
-    return [
-      {
-        id: "3",
-        userId: 54321,
-        username: "0xmutu",
-        displayName: "mutu",
-        profilePicture: "/images/mutu-logo-new.png", // Use local image
-        price: 68000,
-        timeframe: "1week",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "4",
-        userId: 98765,
-        username: "cryptoqueen",
-        displayName: "Crypto Queen",
-        profilePicture: "/images/default-avatar.png", // Use local image
-        price: 72500,
-        timeframe: "1month",
-        createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-      },
-    ]
+  // If we have predictions in memory, return them
+  if (predictions.length > 0) {
+    return predictions
   }
 
-  return predictions
+  // Otherwise, return some mock data
+  return [
+    {
+      id: "3",
+      userId: 54321,
+      username: "0xmutu",
+      displayName: "mutu",
+      profilePicture: "/images/mutu-logo-new.png", // Use local image
+      price: 68000,
+      timeframe: "1week",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "4",
+      userId: 98765,
+      username: "cryptoqueen",
+      displayName: "Crypto Queen",
+      profilePicture: "/images/default-avatar.png", // Use local image
+      price: 72500,
+      timeframe: "1month",
+      createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    },
+  ]
 }
 
 // Get all winners
