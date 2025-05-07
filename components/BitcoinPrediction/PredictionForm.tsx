@@ -304,7 +304,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
           <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50] text-center">
             <h2 className="text-2xl font-bold text-[#E9E8FF] mb-4">Prediction Fee</h2>
-            <p className="text-[#B8A8FF] mb-6">You need to pay 0.1 MON to submit your Bitcoin price prediction</p>
+            <p className="text-[#B8A8FF] mb-6">You need to pay 1 MON to submit your Bitcoin price prediction</p>
 
             {!isConnected ? (
               <div className="w-full space-y-4">
@@ -360,7 +360,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
                   }
                 }}
               >
-                {isPending ? "Processing..." : `Pay 0.1 MON to Submit`}
+                {isPending ? "Processing..." : `Pay 1 MON to Submit`}
               </button>
             )}
           </div>
@@ -501,7 +501,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
         <div className="p-4 bg-blue-800/10 border border-blue-600/20 rounded-md mt-4">
           <p className="text-blue-300 text-center text-sm">
-            You can make multiple predictions. Each prediction requires a 0.1 MON payment.
+            You can make multiple predictions. Each prediction requires a 1 MON payment.
           </p>
         </div>
 
