@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, User } from "lucide-react"
+import { Trophy, User, Wallet } from "lucide-react"
 import { getWinners } from "@/lib/predictions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useMiniAppContext } from "@/hooks/use-miniapp-context"
@@ -21,6 +21,7 @@ interface Winner {
   predictionDate: string
   winDate: string
   reward: string
+  walletAddress?: string
 }
 
 export default function WinnersList() {
@@ -49,6 +50,12 @@ export default function WinnersList() {
       month: "long",
       day: "numeric",
     })
+  }
+
+  // Function to format wallet address
+  const formatWalletAddress = (address?: string) => {
+    if (!address) return "N/A"
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
   }
 
   return (
@@ -125,6 +132,13 @@ export default function WinnersList() {
                     <p className="text-gray-400">Win Date:</p>
                     <p className="text-white">{formatDate(winner.winDate)}</p>
                   </div>
+                </div>
+
+                {/* Wallet Address Section */}
+                <div className="flex items-center mt-2 p-2 bg-gray-800/30 rounded-md">
+                  <Wallet className="h-4 w-4 text-yellow-400 mr-2" />
+                  <span className="text-xs text-gray-300 mr-2">Wallet:</span>
+                  <span className="text-xs font-mono text-yellow-300">{formatWalletAddress(winner.walletAddress)}</span>
                 </div>
 
                 <div className="mt-2 p-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded text-center">

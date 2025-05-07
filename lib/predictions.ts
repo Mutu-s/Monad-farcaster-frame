@@ -10,6 +10,7 @@ export interface Prediction {
   price: number
   timeframe: string
   createdAt: string
+  walletAddress?: string // Added wallet address field
 }
 
 export interface Winner extends Prediction {
@@ -35,6 +36,7 @@ const winners: Winner[] = [
     predictionDate: "2023-04-15T10:30:00Z",
     winDate: "2023-04-22T10:30:00Z",
     reward: "10 MONAD Tokens",
+    walletAddress: "0x9EF7b8dd1425B252d9468A53e6c9664da544D516",
   },
   {
     id: "2",
@@ -49,6 +51,7 @@ const winners: Winner[] = [
     predictionDate: "2023-03-01T14:20:00Z",
     winDate: "2023-03-02T14:20:00Z",
     reward: "1 MONAD Token",
+    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
   },
 ]
 
@@ -84,6 +87,7 @@ export async function getPredictions(): Promise<Prediction[]> {
         price: 68000,
         timeframe: "1week",
         createdAt: new Date().toISOString(),
+        walletAddress: "0x9EF7b8dd1425B252d9468A53e6c9664da544D516",
       },
       {
         id: "4",
@@ -94,6 +98,7 @@ export async function getPredictions(): Promise<Prediction[]> {
         price: 72500,
         timeframe: "1month",
         createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        walletAddress: "0x7a16ff8270133f063aab6c9977183d9e72835428",
       },
     ]
   }

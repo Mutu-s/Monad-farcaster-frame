@@ -65,8 +65,8 @@
     "wagmi": "latest",
     "@farcaster/frame-core": "latest",
     "@farcaster/frame-wagmi-connector": "latest",
-    "uuid": "latest",
-    "@reown/appkit-adapter-wagmi": "latest"
+    "@reown/appkit-adapter-wagmi": "latest",
+    "uuid": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

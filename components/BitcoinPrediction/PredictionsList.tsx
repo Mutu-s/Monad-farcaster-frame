@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getPredictions } from "@/lib/predictions"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TrendingUp, User } from "lucide-react"
+import { TrendingUp, User, Wallet } from "lucide-react"
 import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 
 interface Prediction {
@@ -17,6 +17,7 @@ interface Prediction {
   price: number
   timeframe: string
   createdAt: string
+  walletAddress?: string
 }
 
 export default function PredictionsList() {
@@ -46,6 +47,12 @@ export default function PredictionsList() {
       "1month": "1 Month Later",
     }
     return options[timeframe] || timeframe
+  }
+
+  // Function to format wallet address
+  const formatWalletAddress = (address?: string) => {
+    if (!address) return "N/A"
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
   }
 
   return (
@@ -78,26 +85,34 @@ export default function PredictionsList() {
         ) : (
           <div className="space-y-4">
             {predictions.map((prediction) => (
-              <div
-                key={prediction.id}
-                className="flex items-center space-x-4 p-4 border border-orange-500/30 rounded-lg bg-black/60"
-              >
-                <Avatar>
-                  {prediction.username === "0xmutu" ? (
-                    <AvatarImage src="/images/mutu-logo-new.png" alt={prediction.displayName} />
-                  ) : (
-                    <AvatarFallback className="bg-orange-500">
-                      <User className="h-6 w-6 text-white" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium text-white">{prediction.displayName}</p>
-                  <p className="text-sm text-gray-400">@{prediction.username}</p>
+              <div key={prediction.id} className="flex flex-col p-4 border border-orange-500/30 rounded-lg bg-black/60">
+                <div className="flex items-center space-x-4 mb-3">
+                  <Avatar>
+                    {prediction.username === "0xmutu" ? (
+                      <AvatarImage src="/images/mutu-logo-new.png" alt={prediction.displayName} />
+                    ) : (
+                      <AvatarFallback className="bg-orange-500">
+                        <User className="h-6 w-6 text-white" />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium text-white">{prediction.displayName}</p>
+                    <p className="text-sm text-gray-400">@{prediction.username}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-orange-500">${prediction.price.toLocaleString()}</p>
+                    <p className="text-sm text-gray-400">{getTimeframeText(prediction.timeframe)}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-orange-500">${prediction.price.toLocaleString()}</p>
-                  <p className="text-sm text-gray-400">{getTimeframeText(prediction.timeframe)}</p>
+
+                {/* Wallet Address Section */}
+                <div className="flex items-center mt-2 p-2 bg-gray-800/30 rounded-md">
+                  <Wallet className="h-4 w-4 text-orange-400 mr-2" />
+                  <span className="text-xs text-gray-300 mr-2">Wallet:</span>
+                  <span className="text-xs font-mono text-orange-300">
+                    {formatWalletAddress(prediction.walletAddress)}
+                  </span>
                 </div>
               </div>
             ))}
