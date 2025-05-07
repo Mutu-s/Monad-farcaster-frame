@@ -96,7 +96,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   const [price, setPrice] = useState("")
   const [timeframe, setTimeframe] = useState("1week")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { sendTransaction, isPending, isSuccess } = useSendTransaction()
+  const { sendTransaction, isPending, isSuccess, reset } = useSendTransaction()
   const { isConnected, address } = useAccount()
   const [predictionSubmitted, setPredictionSubmitted] = useState(false)
   const [submittedPrice, setSubmittedPrice] = useState("")
@@ -163,6 +163,9 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   // New function to handle the initial prediction entry
   const handlePredictionEntry = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Reset transaction success state
+    reset()
 
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
       toast({
@@ -283,6 +286,9 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
           localStorage.removeItem("bitcoin_prediction_payment_status")
         }
 
+        // Reset transaction success state
+        reset()
+
         // Notify parent component
         if (onResetPayment) {
           onResetPayment()
@@ -291,7 +297,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
       return () => clearTimeout(timer)
     }
-  }, [predictionSubmitted, onResetPayment])
+  }, [predictionSubmitted, onResetPayment, reset])
 
   const timeframeOptions = {
     "1day": "1 Day Later",
@@ -531,7 +537,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
             ← Back to edit prediction
           </button>
 
-          {isSuccess && (
+          {isSuccess && !isPending && (
             <div className="p-4 bg-green-800/30 border border-green-600 rounded-md">
               <p className="text-green-400 text-center">Payment successful! Your prediction is being submitted...</p>
             </div>
