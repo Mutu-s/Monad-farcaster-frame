@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -114,41 +114,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
     }
   }
 
-  // Handle payment success
-  useEffect(() => {
-    if (isSuccess && !hasPaid) {
-      // Regular payment success
-      onPaymentSuccess()
-
-      // Show success message briefly
-      setShowSuccessMessage(true)
-
-      // Set a timeout to hide the success message and return to prediction form
-      setTimeout(() => {
-        setShowSuccessMessage(false)
-
-        // Now that payment is successful, submit the pending prediction
-        if (pendingPrediction) {
-          submitPrediction(pendingPrediction.price, pendingPrediction.timeframe)
-        }
-
-        // Reset states to return to prediction form
-        setPredictionEntered(false)
-        setPendingPrediction(null)
-
-        // Reset payment status
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("bitcoin_prediction_payment_status")
-        }
-
-        // Notify parent component
-        if (onResetPayment) {
-          onResetPayment()
-        }
-      }, 1500) // Show success message for 1.5 seconds
-    }
-  }, [isSuccess, hasPaid, onPaymentSuccess, pendingPrediction, onResetPayment])
-
   // Handle payment
   const handlePayment = () => {
     if (!isConnected) return
@@ -157,6 +122,9 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       to: PAYMENT_ADDRESS,
       value: parseEther("0.1"),
     })
+
+    // Ödeme başarılı olduğunda parent component'i bilgilendir
+    onPaymentSuccess()
   }
 
   // New function to handle the initial prediction entry
@@ -401,9 +369,34 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
             ← Back to edit prediction
           </button>
 
-          {showSuccessMessage && (
+          {isSuccess && (
             <div className="p-4 bg-green-800/30 border border-green-600 rounded-md">
-              <p className="text-green-400 text-center">Payment successful! Your prediction is being submitted...</p>
+              <p className="text-green-400 text-center font-bold mb-3">Ödeme başarılı! Tahmininiz kaydedildi.</p>
+              <button
+                onClick={() => {
+                  // Tahmini gönder
+                  if (pendingPrediction) {
+                    submitPrediction(pendingPrediction.price, pendingPrediction.timeframe)
+                  }
+
+                  // Tahmin formuna dön
+                  setPredictionEntered(false)
+                  setPendingPrediction(null)
+
+                  // Ödeme durumunu sıfırla
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("bitcoin_prediction_payment_status")
+                  }
+
+                  // Parent component'i bilgilendir
+                  if (onResetPayment) {
+                    onResetPayment()
+                  }
+                }}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+              >
+                Tahmin Formuna Dön
+              </button>
             </div>
           )}
         </div>
