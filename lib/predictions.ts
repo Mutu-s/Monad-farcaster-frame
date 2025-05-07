@@ -23,76 +23,11 @@ export interface Winner extends Prediction {
 // Local storage key for predictions
 const PREDICTIONS_STORAGE_KEY = "bitcoin_predictions"
 
-// Initial mock data for predictions
-const initialPredictions: Prediction[] = [
-  {
-    id: "3",
-    userId: 54321,
-    username: "0xmutu",
-    displayName: "mutu",
-    profilePicture: "/images/mutu-logo-new.png",
-    price: 68000,
-    timeframe: "1week",
-    createdAt: new Date().toISOString(),
-    walletAddress: "0x9EF7b8dd1425B252d9468A53e6c9664da544D516",
-  },
-  {
-    id: "4",
-    userId: 98765,
-    username: "cryptoqueen",
-    displayName: "Crypto Queen",
-    profilePicture: "/images/default-avatar.png",
-    price: 72500,
-    timeframe: "1month",
-    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    walletAddress: "0x7a16ff8270133f063aab6c9977183d9e72835428",
-  },
-  {
-    id: "5",
-    userId: 12345,
-    username: "bitcoinmaxi",
-    displayName: "Bitcoin Maximalist",
-    profilePicture: "/images/default-avatar.png",
-    price: 75000,
-    timeframe: "1day",
-    createdAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-  },
-]
+// Örnek tahminleri boş bir dizi ile değiştir
+const initialPredictions: Prediction[] = []
 
-// Mock data for winners
-const winners: Winner[] = [
-  {
-    id: "1",
-    userId: 12345,
-    username: "0xmutu",
-    displayName: "mutu",
-    profilePicture: "/images/mutu-logo-new.png",
-    price: 64500,
-    actualPrice: 64600,
-    timeframe: "1week",
-    createdAt: "2023-04-15T10:30:00Z",
-    predictionDate: "2023-04-15T10:30:00Z",
-    winDate: "2023-04-22T10:30:00Z",
-    reward: "10 MONAD Tokens",
-    walletAddress: "0x9EF7b8dd1425B252d9468A53e6c9664da544D516",
-  },
-  {
-    id: "2",
-    userId: 67890,
-    username: "vitalik",
-    displayName: "Vitalik B.",
-    profilePicture: "/images/default-avatar.png",
-    price: 70200,
-    actualPrice: 70000,
-    timeframe: "1day",
-    createdAt: "2023-03-01T14:20:00Z",
-    predictionDate: "2023-03-01T14:20:00Z",
-    winDate: "2023-03-02T14:20:00Z",
-    reward: "1 MONAD Token",
-    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-  },
-]
+// Mock data for winners kısmını da boş bir dizi ile değiştir
+const winners: Winner[] = []
 
 // Load predictions from localStorage
 const loadPredictions = (): Prediction[] => {
