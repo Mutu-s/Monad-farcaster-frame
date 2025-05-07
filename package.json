@@ -62,10 +62,11 @@
     "viem": "latest",
     "@wagmi/core": "latest",
     "@farcaster/frame-sdk": "latest",
-    "@farcaster/frame-core": "latest",
     "wagmi": "latest",
+    "@farcaster/frame-core": "latest",
     "@farcaster/frame-wagmi-connector": "latest",
-    "uuid": "latest"
+    "uuid": "latest",
+    "@reown/appkit-adapter-wagmi": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
