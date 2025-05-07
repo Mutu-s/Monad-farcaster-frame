@@ -15,7 +15,7 @@ export default function RewardInfo() {
           </div>
           <h3 className="text-lg font-semibold text-orange-400 mb-2">Daily Predictions</h3>
           <p className="text-center text-orange-200">
-            Predict Bitcoin's price 24 hours from now. Most accurate prediction wins 1 MONAD.
+            Predict Bitcoin's price 24 hours from now. Most accurate prediction wins 3 MONAD.
           </p>
         </div>
 
@@ -25,7 +25,7 @@ export default function RewardInfo() {
           </div>
           <h3 className="text-lg font-semibold text-orange-400 mb-2">Weekly Predictions</h3>
           <p className="text-center text-orange-200">
-            Predict Bitcoin's price 7 days from now. Most accurate prediction wins 5 MONAD.
+            Predict Bitcoin's price 7 days from now. Most accurate prediction wins 10 MONAD.
           </p>
         </div>
 
@@ -35,7 +35,7 @@ export default function RewardInfo() {
           </div>
           <h3 className="text-lg font-semibold text-orange-400 mb-2">Monthly Predictions</h3>
           <p className="text-center text-orange-200">
-            Predict Bitcoin's price 30 days from now. Most accurate prediction wins 10 MONAD.
+            Predict Bitcoin's price 30 days from now. Most accurate prediction wins 50 MONAD.
           </p>
         </div>
       </div>
@@ -43,7 +43,7 @@ export default function RewardInfo() {
       <div className="bg-black/30 backdrop-blur-md rounded-xl p-4 border border-orange-500/30">
         <h3 className="text-lg font-semibold text-orange-400 mb-2">How It Works</h3>
         <ol className="list-decimal list-inside space-y-2 text-orange-200">
-          <li>Pay the 0.1 MONAD entry fee to participate</li>
+          <li>Pay the 1.0 MONAD entry fee to participate</li>
           <li>Submit your Bitcoin price prediction for your chosen timeframe</li>
           <li>Winners are determined by the closest prediction to the actual price</li>
           <li>Rewards are distributed automatically to winners' wallets</li>

@@ -23,11 +23,76 @@ export interface Winner extends Prediction {
 // Local storage key for predictions
 const PREDICTIONS_STORAGE_KEY = "bitcoin_predictions"
 
-// Boş başlangıç tahminleri
-const initialPredictions: Prediction[] = []
+// Initial mock data for predictions
+const initialPredictions: Prediction[] = [
+  {
+    id: "3",
+    userId: 54321,
+    username: "0xmutu",
+    displayName: "mutu",
+    profilePicture: "/images/mutu-logo-new.png",
+    price: 68000,
+    timeframe: "1week",
+    createdAt: new Date().toISOString(),
+    walletAddress: "0x9EF7b8dd1425B252d9468A53e6c9664da544D516",
+  },
+  {
+    id: "4",
+    userId: 98765,
+    username: "cryptoqueen",
+    displayName: "Crypto Queen",
+    profilePicture: "/images/default-avatar.png",
+    price: 72500,
+    timeframe: "1month",
+    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    walletAddress: "0x7a16ff8270133f063aab6c9977183d9e72835428",
+  },
+  {
+    id: "5",
+    userId: 12345,
+    username: "bitcoinmaxi",
+    displayName: "Bitcoin Maximalist",
+    profilePicture: "/images/default-avatar.png",
+    price: 75000,
+    timeframe: "1day",
+    createdAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+  },
+]
 
-// Boş kazananlar listesi
-const winners: Winner[] = []
+// Mock data for winners
+const winners: Winner[] = [
+  {
+    id: "1",
+    userId: 12345,
+    username: "0xmutu",
+    displayName: "mutu",
+    profilePicture: "/images/mutu-logo-new.png",
+    price: 64500,
+    actualPrice: 64600,
+    timeframe: "1week",
+    createdAt: "2023-04-15T10:30:00Z",
+    predictionDate: "2023-04-15T10:30:00Z",
+    winDate: "2023-04-22T10:30:00Z",
+    reward: "10 MONAD Tokens",
+    walletAddress: "0x9EF7b8dd1425B252d9468A53e6c9664da544D516",
+  },
+  {
+    id: "2",
+    userId: 67890,
+    username: "vitalik",
+    displayName: "Vitalik B.",
+    profilePicture: "/images/default-avatar.png",
+    price: 70200,
+    actualPrice: 70000,
+    timeframe: "1day",
+    createdAt: "2023-03-01T14:20:00Z",
+    predictionDate: "2023-03-01T14:20:00Z",
+    winDate: "2023-03-02T14:20:00Z",
+    reward: "1 MONAD Token",
+    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
+  },
+]
 
 // Load predictions from localStorage
 const loadPredictions = (): Prediction[] => {
@@ -35,31 +100,25 @@ const loadPredictions = (): Prediction[] => {
     const storedPredictions = localStorage.getItem(PREDICTIONS_STORAGE_KEY)
     if (storedPredictions) {
       try {
-        const parsedPredictions = JSON.parse(storedPredictions)
-        console.log("Loaded predictions from localStorage:", parsedPredictions)
-        return parsedPredictions
+        return JSON.parse(storedPredictions)
       } catch (error) {
         console.error("Error parsing stored predictions:", error)
       }
     }
   }
-  console.log("No predictions found in localStorage, returning empty array")
-  return [...initialPredictions]
+  return [...initialPredictions] // Return a copy of initial predictions if nothing in localStorage
 }
 
 // Save predictions to localStorage
 const savePredictions = (predictions: Prediction[]): void => {
   if (typeof window !== "undefined") {
-    console.log("Saving predictions to localStorage:", predictions)
     localStorage.setItem(PREDICTIONS_STORAGE_KEY, JSON.stringify(predictions))
   }
 }
 
 // Get all predictions (sorted by newest first)
 export async function getPredictions(): Promise<Prediction[]> {
-  const predictions = loadPredictions()
-  console.log("getPredictions returning:", predictions)
-  return predictions
+  return loadPredictions()
 }
 
 // Add a new prediction
@@ -71,16 +130,15 @@ export async function addPrediction(prediction: Omit<Prediction, "id">): Promise
     id: uuidv4(),
   }
 
-  console.log("Adding new prediction:", newPrediction)
-
-  // Add to beginning of array
-  const updatedPredictions = [newPrediction, ...predictions]
+  predictions.unshift(newPrediction) // Add to beginning of array
 
   // Keep only the last 100 predictions
-  const limitedPredictions = updatedPredictions.slice(0, 100)
+  if (predictions.length > 100) {
+    predictions = predictions.slice(0, 100)
+  }
 
   // Save to localStorage
-  savePredictions(limitedPredictions)
+  savePredictions(predictions)
 
   return newPrediction
 }
@@ -99,12 +157,4 @@ export async function addWinner(winner: Omit<Winner, "id">): Promise<Winner> {
 
   winners.unshift(newWinner)
   return newWinner
-}
-
-// Debug function to clear all predictions (for testing)
-export function clearAllPredictions(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(PREDICTIONS_STORAGE_KEY)
-    console.log("All predictions cleared from localStorage")
-  }
 }

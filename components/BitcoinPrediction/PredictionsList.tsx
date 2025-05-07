@@ -25,13 +25,10 @@ export default function PredictionsList() {
   const [predictions, setPredictions] = useState<Prediction[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // useEffect hook'unu güncelleyelim
   useEffect(() => {
     const fetchPredictions = async () => {
       try {
-        console.log("Fetching predictions...")
         const data = await getPredictions()
-        console.log("Fetched predictions:", data)
         setPredictions(data)
       } catch (error) {
         console.error("Error fetching predictions:", error)

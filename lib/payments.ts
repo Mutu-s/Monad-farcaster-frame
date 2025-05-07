@@ -71,12 +71,13 @@ export function incrementPredictionCount(): void {
   }
 }
 
+// Ödeme miktarını 0.1'den 1'e değiştir
 /**
  * Get the payment amount based on prediction count
  * @returns The payment amount in MON
  */
 export function getPaymentAmount(): string {
-  return "0.1"
+  return "1.0"
 }
 
 /**
