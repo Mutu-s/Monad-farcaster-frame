@@ -134,7 +134,7 @@ export default function PredictionsList() {
           <div className="mt-6 flex flex-col items-center justify-center bg-black/60 p-6 rounded-lg">
             <TrendingUp size={100} className="text-orange-500 mb-4" strokeWidth={1.5} />
             <p className="text-center text-orange-300">
-              Make a prediction to see it appear here. All predictions are stored on-chain and visible to everyone.
+              Make a prediction to see it appear here. All predictions are stored and visible to everyone.
             </p>
           </div>
         )}
