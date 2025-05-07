@@ -272,23 +272,26 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
   // Add this after the handleSubmit function
   useEffect(() => {
-    // If prediction was submitted, show success message for 3 seconds then return to prediction form
+    // If prediction was submitted, show success message for 3 seconds then reset payment status
     if (predictionSubmitted) {
       const timer = setTimeout(() => {
-        // Reset to prediction form without resetting payment status
+        // Reset to payment page
         setPredictionSubmitted(false)
 
-        // Clear the form fields for a new prediction
-        setPrice("")
-        setTimeframe("1week")
+        // Reset payment status
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("bitcoin_prediction_payment_status")
+        }
 
-        // No need to reset payment status or notify parent component
-        // The user should be able to make another prediction without paying again
+        // Notify parent component
+        if (onResetPayment) {
+          onResetPayment()
+        }
       }, 3000) // Show success message for 3 seconds
 
       return () => clearTimeout(timer)
     }
-  }, [predictionSubmitted])
+  }, [predictionSubmitted, onResetPayment])
 
   const timeframeOptions = {
     "1day": "1 Day Later",
@@ -627,7 +630,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
         <div className="p-4 bg-blue-800/10 border border-blue-600/20 rounded-md mt-4">
           <p className="text-blue-300 text-center text-sm">
-            You can make multiple predictions after paying once. Make as many predictions as you want!
+            Her tahmin için 0.1 MON ödeme yapmanız gerekmektedir. Her doğru tahmin için ödül kazanma şansınız var!
           </p>
         </div>
 
