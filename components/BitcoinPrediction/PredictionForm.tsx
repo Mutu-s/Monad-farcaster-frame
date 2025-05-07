@@ -50,25 +50,25 @@ function getTimeUntilMidnight(): string {
   return `${diffHrs}h ${diffMins}m`
 }
 
+// Function to connect to MetaMask
 const connectMetaMask = async () => {
   if (typeof window !== "undefined" && window.ethereum) {
     try {
       // Simple direct request to connect
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
-      console.log("Connected accounts:", accounts)
+      await window.ethereum.request({ method: "eth_requestAccounts" })
 
       toast({
         title: "Wallet Connected",
         description: "MetaMask wallet connected successfully!",
       })
 
-      // After successful connection, try to switch network
+      // After successful connection, try to switch to Monad network
       try {
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: "0x279f" }], // Monad Testnet chain ID (10143 in hex)
         })
-      } catch (switchError) {
+      } catch (switchError: any) {
         // If the network doesn't exist, add it
         if (switchError.code === 4902) {
           try {
@@ -169,8 +169,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       }
     }
   }, [])
-
-  // Handle wallet connection for web (MetaMask)
 
   // Handle wallet connection
   const handleConnect = () => {
@@ -835,4 +833,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       </p>
 
       <Toaster />
-    </div>\
+    </div>
+  )
+}
