@@ -96,7 +96,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   const [price, setPrice] = useState("")
   const [timeframe, setTimeframe] = useState("1week")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { sendTransaction, isPending, isSuccess } = useSendTransaction()
+  const { sendTransaction, isPending, isSuccess, reset: resetTransaction } = useSendTransaction()
   const { isConnected, address } = useAccount()
   const [predictionSubmitted, setPredictionSubmitted] = useState(false)
   const [submittedPrice, setSubmittedPrice] = useState("")
@@ -108,6 +108,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   const [predictionEntered, setPredictionEntered] = useState(false)
   const [pendingPrediction, setPendingPrediction] = useState<{ price: string; timeframe: string } | null>(null)
   const [lastPredictionDate, setLastPredictionDate] = useState<Date | null>(null)
+  const [paymentSuccessful, setPaymentSuccessful] = useState(false)
 
   // Add this useEffect to check if the user has already made a prediction today when the component mounts
   useEffect(() => {
@@ -142,6 +143,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
     if (isSuccess && !hasPaid) {
       // Regular payment success
       onPaymentSuccess()
+      setPaymentSuccessful(true)
 
       // Now that payment is successful, submit the pending prediction
       if (pendingPrediction) {
@@ -149,6 +151,32 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       }
     }
   }, [isSuccess, hasPaid, onPaymentSuccess, pendingPrediction])
+
+  // Add effect to automatically return to prediction form after payment success
+  useEffect(() => {
+    if (paymentSuccessful) {
+      // Wait a short time to show the success message, then return to prediction form
+      const timer = setTimeout(() => {
+        // Reset states to return to prediction form
+        setPredictionEntered(false)
+        setPendingPrediction(null)
+        setPaymentSuccessful(false)
+        resetTransaction()
+
+        // Reset payment status
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("bitcoin_prediction_payment_status")
+        }
+
+        // Notify parent component
+        if (onResetPayment) {
+          onResetPayment()
+        }
+      }, 1500) // Show success message for 1.5 seconds
+
+      return () => clearTimeout(timer)
+    }
+  }, [paymentSuccessful, onResetPayment, resetTransaction])
 
   // Handle payment
   const handlePayment = () => {
@@ -243,20 +271,11 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         description: "Your Bitcoin price prediction has been recorded.",
       })
 
-      // Reset form and states to return to prediction form
+      // Reset form
       setPrice("")
-      setPendingPrediction(null)
-      setPredictionEntered(false)
 
-      // Reset payment status for next prediction
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("bitcoin_prediction_payment_status")
-      }
-
-      // Notify parent component
-      if (onResetPayment) {
-        onResetPayment()
-      }
+      // Note: We don't reset the prediction entered state here
+      // That will be handled by the useEffect that watches paymentSuccessful
     } catch (error) {
       console.error("Error submitting prediction:", error)
       toast({
@@ -264,133 +283,21 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         description: "An error occurred while submitting your prediction. Please try again.",
         variant: "destructive",
       })
+
+      // Reset states on error
+      setPredictionEntered(false)
+      setPendingPrediction(null)
+      setPaymentSuccessful(false)
     } finally {
       setIsSubmitting(false)
     }
   }
-
-  // Add this after the handleSubmit function
-  // Remove this useEffect since we're not using predictionSubmitted anymore
-  // useEffect(() => {
-  //   // If prediction was submitted, show success message for 3 seconds then reset to payment page
-  //   if (predictionSubmitted) {
-  //     const timer = setTimeout(() => {
-  //       // Reset to payment page
-  //       setPredictionSubmitted(false)
-
-  //       // Reset payment status
-  //       if (typeof window !== "undefined") {
-  //         localStorage.removeItem("bitcoin_prediction_payment_status")
-  //       }
-
-  //       // Notify parent component
-  //       if (onResetPayment) {
-  //         onResetPayment()
-  //       }
-  //     }, 3000) // Show success message for 3 seconds
-
-  //     return () => clearTimeout(timer)
-  //   }
-  // }, [predictionSubmitted, onResetPayment])
 
   const timeframeOptions = {
     "1day": "1 Day Later",
     "1week": "1 Week Later",
     "1month": "1 Month Later",
   }
-
-  // If prediction is submitted, show success message
-  // if (predictionSubmitted) {
-  //   return (
-  //     <div
-  //       style={{
-  //         maxWidth: "600px",
-  //         display: "flex",
-  //         flexDirection: "column",
-  //         margin: "0 auto",
-  //         background: "#1A1626",
-  //         borderRadius: "16px",
-  //         padding: "32px",
-  //         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-  //         width: "100%",
-  //       }}
-  //     >
-  //       <div className="flex items-center justify-between mb-6">
-  //         <div>
-  //           <h1
-  //             style={{
-  //               color: "#E9E8FF",
-  //               fontSize: "24px",
-  //               fontWeight: "600",
-  //             }}
-  //           >
-  //             Bitcoin Price Prediction
-  //           </h1>
-  //           <p
-  //             style={{
-  //               color: "#B8A8FF",
-  //               fontSize: "14px",
-  //               marginTop: "4px",
-  //             }}
-  //           >
-  //             Predict the future price of Bitcoin and win rewards
-  //           </p>
-  //         </div>
-  //       </div>
-
-  //       <div className="flex justify-center mb-6 bg-[#2D2B3B] p-4 rounded-lg">
-  //         <LineChart size={200} className="text-[#9B6DFF]" strokeWidth={1.5} />
-  //       </div>
-
-  //       <div className="space-y-6">
-  //         <div className="p-6 bg-green-800/20 border border-green-600/30 rounded-lg text-center">
-  //           <div className="flex items-center justify-center mb-4">
-  //             <div className="bg-green-500/20 p-3 rounded-full">
-  //               <Check className="h-12 w-12 text-green-500" />
-  //             </div>
-  //           </div>
-  //           <h2 className="text-2xl font-bold text-green-400 mb-2">Prediction Submitted!</h2>
-  //           <p className="text-green-300 mb-4">
-  //             Your Bitcoin price prediction has been successfully recorded. Thank you for participating!
-  //           </p>
-  //         </div>
-
-  //         <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">
-  //           <h3 className="text-xl font-bold text-[#E9E8FF] mb-4 text-center">Your Prediction</h3>
-
-  //           <div className="space-y-4">
-  //             <div>
-  //               <p className="text-[#B8A8FF] text-sm">Predicted Bitcoin Price ($)</p>
-  //               <p className="text-[#E9E8FF] text-lg font-medium">${submittedPrice}</p>
-  //             </div>
-
-  //             <div>
-  //               <p className="text-[#B8A8FF] text-sm">Time Frame</p>
-  //               <p className="text-[#E9E8FF] text-lg font-medium">
-  //                 {submittedTimeframe === "1day"
-  //                   ? "1 Day Later"
-  //                   : submittedTimeframe === "1week"
-  //                     ? "1 Week Later"
-  //                     : "1 Month Later"}
-  //               </p>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </div>
-
-  //       <p
-  //         style={{
-  //           color: "#8F8BA8",
-  //           textAlign: "center",
-  //           marginTop: "24px",
-  //           fontSize: "14px",
-  //         }}
-  //       >
-  //         Winners with correct predictions will receive rewards based on their accuracy.
-  //       </p>
-  //     </div>
-  //   )
-  // }
 
   // If prediction is entered but not yet paid for, show payment screen
   if (predictionEntered && pendingPrediction) {
