@@ -27,9 +27,6 @@ interface PredictionFormProps {
   onResetPayment?: () => void
 }
 
-// Track last prediction date but without daily limit
-// const [lastPredictionDate, setLastPredictionDate] = useState<Date | null>(null)
-
 // Function to connect to MetaMask
 const connectMetaMask = async () => {
   if (typeof window !== "undefined" && window.ethereum) {
@@ -96,36 +93,15 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   const [price, setPrice] = useState("")
   const [timeframe, setTimeframe] = useState("1week")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { sendTransaction, isPending, isSuccess, reset: resetTransaction } = useSendTransaction()
+  const { sendTransaction, isPending, isSuccess } = useSendTransaction()
   const { isConnected, address } = useAccount()
-  const [predictionSubmitted, setPredictionSubmitted] = useState(false)
-  const [submittedPrice, setSubmittedPrice] = useState("")
-  const [submittedTimeframe, setSubmittedTimeframe] = useState("")
   const formRef = useRef<HTMLFormElement>(null)
   const { isMobile } = useMobile()
 
   // New state for the prediction-first flow
   const [predictionEntered, setPredictionEntered] = useState(false)
   const [pendingPrediction, setPendingPrediction] = useState<{ price: string; timeframe: string } | null>(null)
-  const [lastPredictionDate, setLastPredictionDate] = useState<Date | null>(null)
-  const [paymentSuccessful, setPaymentSuccessful] = useState(false)
-
-  // Add this useEffect to check if the user has already made a prediction today when the component mounts
-  useEffect(() => {
-    // Check localStorage for existing prediction
-    if (typeof window !== "undefined") {
-      const existingPrediction = localStorage.getItem("user_prediction")
-      if (existingPrediction) {
-        const prediction = JSON.parse(existingPrediction)
-        setSubmittedPrice(prediction.price)
-        setSubmittedTimeframe(prediction.timeframe)
-
-        // Store the prediction date
-        const predictionDate = new Date(prediction.timestamp)
-        setLastPredictionDate(predictionDate)
-      }
-    }
-  }, [])
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   // Handle wallet connection
   const handleConnect = () => {
@@ -143,25 +119,22 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
     if (isSuccess && !hasPaid) {
       // Regular payment success
       onPaymentSuccess()
-      setPaymentSuccessful(true)
 
-      // Now that payment is successful, submit the pending prediction
-      if (pendingPrediction) {
-        submitPrediction(pendingPrediction.price, pendingPrediction.timeframe)
-      }
-    }
-  }, [isSuccess, hasPaid, onPaymentSuccess, pendingPrediction])
+      // Show success message briefly
+      setShowSuccessMessage(true)
 
-  // Add effect to automatically return to prediction form after payment success
-  useEffect(() => {
-    if (paymentSuccessful) {
-      // Wait a short time to show the success message, then return to prediction form
-      const timer = setTimeout(() => {
+      // Set a timeout to hide the success message and return to prediction form
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+
+        // Now that payment is successful, submit the pending prediction
+        if (pendingPrediction) {
+          submitPrediction(pendingPrediction.price, pendingPrediction.timeframe)
+        }
+
         // Reset states to return to prediction form
         setPredictionEntered(false)
         setPendingPrediction(null)
-        setPaymentSuccessful(false)
-        resetTransaction()
 
         // Reset payment status
         if (typeof window !== "undefined") {
@@ -173,10 +146,8 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
           onResetPayment()
         }
       }, 1500) // Show success message for 1.5 seconds
-
-      return () => clearTimeout(timer)
     }
-  }, [paymentSuccessful, onResetPayment, resetTransaction])
+  }, [isSuccess, hasPaid, onPaymentSuccess, pendingPrediction, onResetPayment])
 
   // Handle payment
   const handlePayment = () => {
@@ -273,9 +244,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
       // Reset form
       setPrice("")
-
-      // Note: We don't reset the prediction entered state here
-      // That will be handled by the useEffect that watches paymentSuccessful
     } catch (error) {
       console.error("Error submitting prediction:", error)
       toast({
@@ -283,11 +251,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         description: "An error occurred while submitting your prediction. Please try again.",
         variant: "destructive",
       })
-
-      // Reset states on error
-      setPredictionEntered(false)
-      setPendingPrediction(null)
-      setPaymentSuccessful(false)
     } finally {
       setIsSubmitting(false)
     }
@@ -438,7 +401,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
             ← Back to edit prediction
           </button>
 
-          {isSuccess && (
+          {showSuccessMessage && (
             <div className="p-4 bg-green-800/30 border border-green-600 rounded-md">
               <p className="text-green-400 text-center">Payment successful! Your prediction is being submitted...</p>
             </div>
