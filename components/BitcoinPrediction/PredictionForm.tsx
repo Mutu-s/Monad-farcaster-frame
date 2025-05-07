@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Check, Clock } from "lucide-react"
+import { LineChart, Check } from "lucide-react"
 import { addPrediction } from "@/lib/predictions"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
@@ -27,28 +27,8 @@ interface PredictionFormProps {
   onResetPayment?: () => void
 }
 
-// Function to check if a date is today
-function isToday(date: Date): boolean {
-  const today = new Date()
-  return (
-    date.getDate() === today.getDate() &&
-    date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear()
-  )
-}
-
-// Function to get time until midnight
-function getTimeUntilMidnight(): string {
-  const now = new Date()
-  const midnight = new Date()
-  midnight.setHours(24, 0, 0, 0)
-
-  const diffMs = midnight.getTime() - now.getTime()
-  const diffHrs = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-
-  return `${diffHrs}h ${diffMins}m`
-}
+// Track last prediction date but without daily limit
+// const [lastPredictionDate, setLastPredictionDate] = useState<Date | null>(null)
 
 // Function to connect to MetaMask
 const connectMetaMask = async () => {
@@ -127,24 +107,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   // New state for the prediction-first flow
   const [predictionEntered, setPredictionEntered] = useState(false)
   const [pendingPrediction, setPendingPrediction] = useState<{ price: string; timeframe: string } | null>(null)
-
-  // Add states for daily prediction tracking
-  const [hasAlreadyPredictedToday, setHasAlreadyPredictedToday] = useState(false)
   const [lastPredictionDate, setLastPredictionDate] = useState<Date | null>(null)
-  const [timeUntilNextPrediction, setTimeUntilNextPrediction] = useState("")
-
-  // Update time until midnight every minute
-  useEffect(() => {
-    if (hasAlreadyPredictedToday) {
-      setTimeUntilNextPrediction(getTimeUntilMidnight())
-
-      const interval = setInterval(() => {
-        setTimeUntilNextPrediction(getTimeUntilMidnight())
-      }, 60000) // Update every minute
-
-      return () => clearInterval(interval)
-    }
-  }, [hasAlreadyPredictedToday])
 
   // Add this useEffect to check if the user has already made a prediction today when the component mounts
   useEffect(() => {
@@ -156,16 +119,9 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         setSubmittedPrice(prediction.price)
         setSubmittedTimeframe(prediction.timeframe)
 
-        // Check if the prediction was made today
+        // Store the prediction date
         const predictionDate = new Date(prediction.timestamp)
         setLastPredictionDate(predictionDate)
-
-        if (isToday(predictionDate)) {
-          setHasAlreadyPredictedToday(true)
-        } else {
-          // If prediction was not made today, user can make a new prediction
-          setHasAlreadyPredictedToday(false)
-        }
       }
     }
   }, [])
@@ -289,9 +245,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         )
       }
 
-      // Set that user has already predicted today
-      setHasAlreadyPredictedToday(true)
-
       // Show success message
       toast({
         title: "Prediction Submitted!",
@@ -344,109 +297,6 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
     "1day": "1 Day Later",
     "1week": "1 Week Later",
     "1month": "1 Month Later",
-  }
-
-  // If already predicted today, show the existing prediction
-  if (hasAlreadyPredictedToday) {
-    return (
-      <div
-        style={{
-          maxWidth: "600px",
-          display: "flex",
-          flexDirection: "column",
-          margin: "0 auto",
-          background: "#1A1626",
-          borderRadius: "16px",
-          padding: "32px",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-          width: "100%",
-        }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1
-              style={{
-                color: "#E9E8FF",
-                fontSize: "24px",
-                fontWeight: "600",
-              }}
-            >
-              Bitcoin Price Prediction
-            </h1>
-            <p
-              style={{
-                color: "#B8A8FF",
-                fontSize: "14px",
-                marginTop: "4px",
-              }}
-            >
-              Predict the future price of Bitcoin and win rewards
-            </p>
-          </div>
-        </div>
-
-        <div className="flex justify-center mb-6 bg-[#2D2B3B] p-4 rounded-lg">
-          <LineChart size={200} className="text-[#9B6DFF]" strokeWidth={1.5} />
-        </div>
-
-        <div className="space-y-6">
-          <div className="p-6 bg-blue-800/20 border border-blue-600/30 rounded-lg text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-blue-500/20 p-3 rounded-full">
-                <Clock className="h-12 w-12 text-blue-400" />
-              </div>
-            </div>
-            <h2 className="text-xl font-bold text-blue-400 mb-2">Daily Prediction Limit Reached</h2>
-            <p className="text-blue-300 mb-2">
-              You can make one prediction per day. Your next prediction will be available at midnight.
-            </p>
-            <p className="text-blue-300 font-semibold">Time until next prediction: {timeUntilNextPrediction}</p>
-          </div>
-
-          <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">
-            <h3 className="text-xl font-bold text-[#E9E8FF] mb-4 text-center">Today's Prediction</h3>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-[#B8A8FF] text-sm">Predicted Bitcoin Price ($)</p>
-                <p className="text-[#E9E8FF] text-lg font-medium">${submittedPrice}</p>
-              </div>
-
-              <div>
-                <p className="text-[#B8A8FF] text-sm">Time Frame</p>
-                <p className="text-[#E9E8FF] text-lg font-medium">
-                  {submittedTimeframe === "1day"
-                    ? "1 Day Later"
-                    : submittedTimeframe === "1week"
-                      ? "1 Week Later"
-                      : "1 Month Later"}
-                </p>
-              </div>
-
-              {lastPredictionDate && (
-                <div>
-                  <p className="text-[#B8A8FF] text-sm">Submitted</p>
-                  <p className="text-[#E9E8FF] text-lg font-medium">
-                    {lastPredictionDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <p
-          style={{
-            color: "#8F8BA8",
-            textAlign: "center",
-            marginTop: "24px",
-            fontSize: "14px",
-          }}
-        >
-          Winners with correct predictions will receive rewards based on their accuracy.
-        </p>
-      </div>
-    )
   }
 
   // If prediction is submitted, show success message
@@ -780,7 +630,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
         <div className="p-4 bg-blue-800/10 border border-blue-600/20 rounded-md mt-4">
           <p className="text-blue-300 text-center text-sm">
-            You can make one prediction per day. Your prediction right resets at midnight.
+            You can make multiple predictions. Each prediction requires a 0.1 MON payment.
           </p>
         </div>
 
