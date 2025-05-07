@@ -88,61 +88,6 @@ const connectMetaMask = async () => {
   }
 }
 
-// Update the submitPrediction function to include wallet address
-const submitPrediction = async (predictionPrice: string, predictionTimeframe: string) => {
-  setIsSubmitting(true)
-
-  try {
-    // Always use local images
-    const profilePicture = user?.username === "0xmutu" ? "/images/mutu-logo-new.png" : "/images/default-avatar.png"
-
-    await addPrediction({
-      userId: user?.id || Math.floor(Math.random() * 100000),
-      username: user?.username || "Anonymous",
-      displayName: user?.displayName || "Anonymous User",
-      profilePicture: profilePicture,
-      price: Number(predictionPrice),
-      timeframe: predictionTimeframe,
-      createdAt: new Date().toISOString(),
-      walletAddress: address || user?.walletAddress, // Include wallet address
-    })
-
-    // Increment prediction count
-    incrementPredictionCount()
-
-    // Save to localStorage to track that user has made a prediction
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "user_prediction",
-        JSON.stringify({
-          price: predictionPrice,
-          timeframe: predictionTimeframe,
-          timestamp: new Date().toISOString(),
-          walletAddress: address || user?.walletAddress,
-        }),
-      )
-    }
-
-    // Show success message
-    toast({
-      title: "Prediction Submitted!",
-      description: "Your Bitcoin price prediction has been recorded.",
-    })
-
-    // Reset form
-    setPrice("")
-  } catch (error) {
-    console.error("Error submitting prediction:", error)
-    toast({
-      title: "Error",
-      description: "An error occurred while submitting your prediction. Please try again.",
-      variant: "destructive",
-    })
-  } finally {
-    setIsSubmitting(false)
-  }
-}
-
 export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayment }: PredictionFormProps) {
   const { isAuthenticated, user } = useAuth()
   const [price, setPrice] = useState("")
@@ -178,7 +123,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       value: parseEther("0.1"),
     })
 
-    // Ödeme başarılı olduğunda parent component'i bilgilendir
+    // Notify parent component of successful payment
     onPaymentSuccess()
   }
 
@@ -224,6 +169,65 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
     // Move to payment step
     setPredictionEntered(true)
+  }
+
+  // Function to submit the prediction after payment
+  const submitPrediction = async (predictionPrice: string, predictionTimeframe: string) => {
+    setIsSubmitting(true)
+
+    try {
+      // Always use local images
+      const profilePicture = user?.username === "0xmutu" ? "/images/mutu-logo-new.png" : "/images/default-avatar.png"
+
+      // Create a new prediction with the user's wallet address
+      const newPrediction = {
+        userId: user?.id || address || Math.floor(Math.random() * 100000).toString(),
+        username: user?.username || "Anonymous",
+        displayName: user?.displayName || "Anonymous User",
+        profilePicture: profilePicture,
+        price: Number(predictionPrice),
+        timeframe: predictionTimeframe,
+        createdAt: new Date().toISOString(),
+        walletAddress: address || user?.walletAddress || "Unknown",
+      }
+
+      // Add the prediction to our storage
+      await addPrediction(newPrediction)
+
+      // Increment prediction count
+      incrementPredictionCount()
+
+      // Save to localStorage to track that user has made a prediction
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "user_prediction",
+          JSON.stringify({
+            price: predictionPrice,
+            timeframe: predictionTimeframe,
+            timestamp: new Date().toISOString(),
+            walletAddress: address || user?.walletAddress,
+          }),
+        )
+      }
+
+      // Show success message
+      toast({
+        title: "Prediction Submitted!",
+        description: "Your Bitcoin price prediction has been recorded.",
+      })
+
+      // Reset form
+      setPrice("")
+    } catch (error) {
+      console.error("Error submitting prediction:", error)
+      toast({
+        title: "Error",
+        description: "An error occurred while submitting your prediction. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const timeframeOptions = {

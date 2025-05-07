@@ -10,7 +10,7 @@ import { useMiniAppContext } from "@/hooks/use-miniapp-context"
 
 interface Prediction {
   id: string
-  userId: number
+  userId: number | string
   username: string
   displayName: string
   profilePicture: string
@@ -38,6 +38,12 @@ export default function PredictionsList() {
     }
 
     fetchPredictions()
+
+    // Set up an interval to refresh predictions every 10 seconds
+    const interval = setInterval(fetchPredictions, 10000)
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(interval)
   }, [])
 
   const getTimeframeText = (timeframe: string) => {
@@ -68,7 +74,7 @@ export default function PredictionsList() {
       <CardContent>
         {isLoading ? (
           <div className="space-y-4">
-            {Array(5)
+            {Array(3)
               .fill(0)
               .map((_, i) => (
                 <div key={i} className="flex items-center space-x-4">
@@ -106,21 +112,32 @@ export default function PredictionsList() {
                   </div>
                 </div>
 
-                {/* Wallet Address Section */}
-                <div className="flex items-center mt-2 p-2 bg-gray-800/30 rounded-md">
-                  <Wallet className="h-4 w-4 text-orange-400 mr-2" />
-                  <span className="text-xs text-gray-300 mr-2">Wallet:</span>
-                  <span className="text-xs font-mono text-orange-300">
+                {/* Wallet Address Section - Prominently displayed */}
+                <div className="flex items-center mt-2 p-3 bg-gray-800/50 rounded-md border border-orange-500/20">
+                  <Wallet className="h-5 w-5 text-orange-400 mr-2" />
+                  <span className="text-sm text-gray-300 mr-2">Wallet:</span>
+                  <span className="text-sm font-mono text-orange-300 font-bold">
                     {formatWalletAddress(prediction.walletAddress)}
                   </span>
+                </div>
+
+                {/* Prediction Date */}
+                <div className="mt-2 text-xs text-gray-400 text-right">
+                  Predicted on: {new Date(prediction.createdAt).toLocaleString()}
                 </div>
               </div>
             ))}
           </div>
         )}
-        <div className="mt-6 flex justify-center bg-black/60 p-4 rounded-lg">
-          <TrendingUp size={200} className="text-orange-500" strokeWidth={1.5} />
-        </div>
+
+        {predictions.length === 0 && (
+          <div className="mt-6 flex flex-col items-center justify-center bg-black/60 p-6 rounded-lg">
+            <TrendingUp size={100} className="text-orange-500 mb-4" strokeWidth={1.5} />
+            <p className="text-center text-orange-300">
+              Make a prediction to see it appear here. All predictions are stored on-chain and visible to everyone.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
