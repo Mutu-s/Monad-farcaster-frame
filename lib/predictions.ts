@@ -23,10 +23,10 @@ export interface Winner extends Prediction {
 // Local storage key for predictions
 const PREDICTIONS_STORAGE_KEY = "bitcoin_predictions"
 
-// Örnek tahminleri boş bir dizi ile değiştir
+// Boş başlangıç tahminleri
 const initialPredictions: Prediction[] = []
 
-// Mock data for winners kısmını da boş bir dizi ile değiştir
+// Boş kazananlar listesi
 const winners: Winner[] = []
 
 // Load predictions from localStorage
@@ -35,25 +35,31 @@ const loadPredictions = (): Prediction[] => {
     const storedPredictions = localStorage.getItem(PREDICTIONS_STORAGE_KEY)
     if (storedPredictions) {
       try {
-        return JSON.parse(storedPredictions)
+        const parsedPredictions = JSON.parse(storedPredictions)
+        console.log("Loaded predictions from localStorage:", parsedPredictions)
+        return parsedPredictions
       } catch (error) {
         console.error("Error parsing stored predictions:", error)
       }
     }
   }
-  return [...initialPredictions] // Return a copy of initial predictions if nothing in localStorage
+  console.log("No predictions found in localStorage, returning empty array")
+  return [...initialPredictions]
 }
 
 // Save predictions to localStorage
 const savePredictions = (predictions: Prediction[]): void => {
   if (typeof window !== "undefined") {
+    console.log("Saving predictions to localStorage:", predictions)
     localStorage.setItem(PREDICTIONS_STORAGE_KEY, JSON.stringify(predictions))
   }
 }
 
 // Get all predictions (sorted by newest first)
 export async function getPredictions(): Promise<Prediction[]> {
-  return loadPredictions()
+  const predictions = loadPredictions()
+  console.log("getPredictions returning:", predictions)
+  return predictions
 }
 
 // Add a new prediction
@@ -65,15 +71,16 @@ export async function addPrediction(prediction: Omit<Prediction, "id">): Promise
     id: uuidv4(),
   }
 
-  predictions.unshift(newPrediction) // Add to beginning of array
+  console.log("Adding new prediction:", newPrediction)
+
+  // Add to beginning of array
+  const updatedPredictions = [newPrediction, ...predictions]
 
   // Keep only the last 100 predictions
-  if (predictions.length > 100) {
-    predictions = predictions.slice(0, 100)
-  }
+  const limitedPredictions = updatedPredictions.slice(0, 100)
 
   // Save to localStorage
-  savePredictions(predictions)
+  savePredictions(limitedPredictions)
 
   return newPrediction
 }
@@ -92,4 +99,12 @@ export async function addWinner(winner: Omit<Winner, "id">): Promise<Winner> {
 
   winners.unshift(newWinner)
   return newWinner
+}
+
+// Debug function to clear all predictions (for testing)
+export function clearAllPredictions(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(PREDICTIONS_STORAGE_KEY)
+    console.log("All predictions cleared from localStorage")
+  }
 }
