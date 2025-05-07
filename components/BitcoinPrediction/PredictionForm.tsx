@@ -272,26 +272,23 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
   // Add this after the handleSubmit function
   useEffect(() => {
-    // If prediction was submitted, show success message for 3 seconds then reset to payment page
+    // If prediction was submitted, show success message for 3 seconds then return to prediction form
     if (predictionSubmitted) {
       const timer = setTimeout(() => {
-        // Reset to payment page
+        // Reset to prediction form without resetting payment status
         setPredictionSubmitted(false)
 
-        // Reset payment status
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("bitcoin_prediction_payment_status")
-        }
+        // Clear the form fields for a new prediction
+        setPrice("")
+        setTimeframe("1week")
 
-        // Notify parent component
-        if (onResetPayment) {
-          onResetPayment()
-        }
+        // No need to reset payment status or notify parent component
+        // The user should be able to make another prediction without paying again
       }, 3000) // Show success message for 3 seconds
 
       return () => clearTimeout(timer)
     }
-  }, [predictionSubmitted, onResetPayment])
+  }, [predictionSubmitted])
 
   const timeframeOptions = {
     "1day": "1 Day Later",
@@ -630,7 +627,7 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
         <div className="p-4 bg-blue-800/10 border border-blue-600/20 rounded-md mt-4">
           <p className="text-blue-300 text-center text-sm">
-            You can make multiple predictions. Each prediction requires a 0.1 MON payment.
+            You can make multiple predictions after paying once. Make as many predictions as you want!
           </p>
         </div>
 
