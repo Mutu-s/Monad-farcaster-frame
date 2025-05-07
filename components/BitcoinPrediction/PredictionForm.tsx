@@ -371,31 +371,33 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
 
           {isSuccess && (
             <div className="p-4 bg-green-800/30 border border-green-600 rounded-md">
-              <p className="text-green-400 text-center font-bold mb-3">Ödeme başarılı! Tahmininiz kaydedildi.</p>
+              <p className="text-green-400 text-center font-bold mb-3">
+                Payment successful! Your prediction has been recorded.
+              </p>
               <button
                 onClick={() => {
-                  // Tahmini gönder
+                  // Submit the prediction
                   if (pendingPrediction) {
                     submitPrediction(pendingPrediction.price, pendingPrediction.timeframe)
                   }
 
-                  // Tahmin formuna dön
+                  // Return to prediction form
                   setPredictionEntered(false)
                   setPendingPrediction(null)
 
-                  // Ödeme durumunu sıfırla
+                  // Reset payment status
                   if (typeof window !== "undefined") {
                     localStorage.removeItem("bitcoin_prediction_payment_status")
                   }
 
-                  // Parent component'i bilgilendir
+                  // Notify parent component
                   if (onResetPayment) {
                     onResetPayment()
                   }
                 }}
                 className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
               >
-                Tahmin Formuna Dön
+                Return to Prediction Form
               </button>
             </div>
           )}
