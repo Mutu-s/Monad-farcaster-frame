@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Check } from "lucide-react"
+import { LineChart } from "lucide-react"
 import { addPrediction } from "@/lib/predictions"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
@@ -225,22 +225,14 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
       // Increment prediction count
       incrementPredictionCount()
 
-      // Save the submitted values
-      setSubmittedPrice(predictionPrice)
-      setSubmittedTimeframe(predictionTimeframe)
-
-      // Get current date and time
-      const now = new Date()
-      setLastPredictionDate(now)
-
-      // Save to localStorage to track that user has made a prediction today
+      // Save to localStorage to track that user has made a prediction
       if (typeof window !== "undefined") {
         localStorage.setItem(
           "user_prediction",
           JSON.stringify({
             price: predictionPrice,
             timeframe: predictionTimeframe,
-            timestamp: now.toISOString(),
+            timestamp: new Date().toISOString(),
           }),
         )
       }
@@ -251,13 +243,20 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
         description: "Your Bitcoin price prediction has been recorded.",
       })
 
-      // Set prediction as submitted
-      setPredictionSubmitted(true)
-
-      // Clear the form
+      // Reset form and states to return to prediction form
       setPrice("")
       setPendingPrediction(null)
       setPredictionEntered(false)
+
+      // Reset payment status for next prediction
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("bitcoin_prediction_payment_status")
+      }
+
+      // Notify parent component
+      if (onResetPayment) {
+        onResetPayment()
+      }
     } catch (error) {
       console.error("Error submitting prediction:", error)
       toast({
@@ -271,27 +270,28 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   }
 
   // Add this after the handleSubmit function
-  useEffect(() => {
-    // If prediction was submitted, show success message for 3 seconds then reset to payment page
-    if (predictionSubmitted) {
-      const timer = setTimeout(() => {
-        // Reset to payment page
-        setPredictionSubmitted(false)
+  // Remove this useEffect since we're not using predictionSubmitted anymore
+  // useEffect(() => {
+  //   // If prediction was submitted, show success message for 3 seconds then reset to payment page
+  //   if (predictionSubmitted) {
+  //     const timer = setTimeout(() => {
+  //       // Reset to payment page
+  //       setPredictionSubmitted(false)
 
-        // Reset payment status
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("bitcoin_prediction_payment_status")
-        }
+  //       // Reset payment status
+  //       if (typeof window !== "undefined") {
+  //         localStorage.removeItem("bitcoin_prediction_payment_status")
+  //       }
 
-        // Notify parent component
-        if (onResetPayment) {
-          onResetPayment()
-        }
-      }, 3000) // Show success message for 3 seconds
+  //       // Notify parent component
+  //       if (onResetPayment) {
+  //         onResetPayment()
+  //       }
+  //     }, 3000) // Show success message for 3 seconds
 
-      return () => clearTimeout(timer)
-    }
-  }, [predictionSubmitted, onResetPayment])
+  //     return () => clearTimeout(timer)
+  //   }
+  // }, [predictionSubmitted, onResetPayment])
 
   const timeframeOptions = {
     "1day": "1 Day Later",
@@ -300,97 +300,97 @@ export default function PredictionForm({ hasPaid, onPaymentSuccess, onResetPayme
   }
 
   // If prediction is submitted, show success message
-  if (predictionSubmitted) {
-    return (
-      <div
-        style={{
-          maxWidth: "600px",
-          display: "flex",
-          flexDirection: "column",
-          margin: "0 auto",
-          background: "#1A1626",
-          borderRadius: "16px",
-          padding: "32px",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-          width: "100%",
-        }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1
-              style={{
-                color: "#E9E8FF",
-                fontSize: "24px",
-                fontWeight: "600",
-              }}
-            >
-              Bitcoin Price Prediction
-            </h1>
-            <p
-              style={{
-                color: "#B8A8FF",
-                fontSize: "14px",
-                marginTop: "4px",
-              }}
-            >
-              Predict the future price of Bitcoin and win rewards
-            </p>
-          </div>
-        </div>
+  // if (predictionSubmitted) {
+  //   return (
+  //     <div
+  //       style={{
+  //         maxWidth: "600px",
+  //         display: "flex",
+  //         flexDirection: "column",
+  //         margin: "0 auto",
+  //         background: "#1A1626",
+  //         borderRadius: "16px",
+  //         padding: "32px",
+  //         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+  //         width: "100%",
+  //       }}
+  //     >
+  //       <div className="flex items-center justify-between mb-6">
+  //         <div>
+  //           <h1
+  //             style={{
+  //               color: "#E9E8FF",
+  //               fontSize: "24px",
+  //               fontWeight: "600",
+  //             }}
+  //           >
+  //             Bitcoin Price Prediction
+  //           </h1>
+  //           <p
+  //             style={{
+  //               color: "#B8A8FF",
+  //               fontSize: "14px",
+  //               marginTop: "4px",
+  //             }}
+  //           >
+  //             Predict the future price of Bitcoin and win rewards
+  //           </p>
+  //         </div>
+  //       </div>
 
-        <div className="flex justify-center mb-6 bg-[#2D2B3B] p-4 rounded-lg">
-          <LineChart size={200} className="text-[#9B6DFF]" strokeWidth={1.5} />
-        </div>
+  //       <div className="flex justify-center mb-6 bg-[#2D2B3B] p-4 rounded-lg">
+  //         <LineChart size={200} className="text-[#9B6DFF]" strokeWidth={1.5} />
+  //       </div>
 
-        <div className="space-y-6">
-          <div className="p-6 bg-green-800/20 border border-green-600/30 rounded-lg text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-green-500/20 p-3 rounded-full">
-                <Check className="h-12 w-12 text-green-500" />
-              </div>
-            </div>
-            <h2 className="text-2xl font-bold text-green-400 mb-2">Prediction Submitted!</h2>
-            <p className="text-green-300 mb-4">
-              Your Bitcoin price prediction has been successfully recorded. Thank you for participating!
-            </p>
-          </div>
+  //       <div className="space-y-6">
+  //         <div className="p-6 bg-green-800/20 border border-green-600/30 rounded-lg text-center">
+  //           <div className="flex items-center justify-center mb-4">
+  //             <div className="bg-green-500/20 p-3 rounded-full">
+  //               <Check className="h-12 w-12 text-green-500" />
+  //             </div>
+  //           </div>
+  //           <h2 className="text-2xl font-bold text-green-400 mb-2">Prediction Submitted!</h2>
+  //           <p className="text-green-300 mb-4">
+  //             Your Bitcoin price prediction has been successfully recorded. Thank you for participating!
+  //           </p>
+  //         </div>
 
-          <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">
-            <h3 className="text-xl font-bold text-[#E9E8FF] mb-4 text-center">Your Prediction</h3>
+  //         <div className="p-6 bg-[#2D2B3B] rounded-lg border border-[#3D3A50]">
+  //           <h3 className="text-xl font-bold text-[#E9E8FF] mb-4 text-center">Your Prediction</h3>
 
-            <div className="space-y-4">
-              <div>
-                <p className="text-[#B8A8FF] text-sm">Predicted Bitcoin Price ($)</p>
-                <p className="text-[#E9E8FF] text-lg font-medium">${submittedPrice}</p>
-              </div>
+  //           <div className="space-y-4">
+  //             <div>
+  //               <p className="text-[#B8A8FF] text-sm">Predicted Bitcoin Price ($)</p>
+  //               <p className="text-[#E9E8FF] text-lg font-medium">${submittedPrice}</p>
+  //             </div>
 
-              <div>
-                <p className="text-[#B8A8FF] text-sm">Time Frame</p>
-                <p className="text-[#E9E8FF] text-lg font-medium">
-                  {submittedTimeframe === "1day"
-                    ? "1 Day Later"
-                    : submittedTimeframe === "1week"
-                      ? "1 Week Later"
-                      : "1 Month Later"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+  //             <div>
+  //               <p className="text-[#B8A8FF] text-sm">Time Frame</p>
+  //               <p className="text-[#E9E8FF] text-lg font-medium">
+  //                 {submittedTimeframe === "1day"
+  //                   ? "1 Day Later"
+  //                   : submittedTimeframe === "1week"
+  //                     ? "1 Week Later"
+  //                     : "1 Month Later"}
+  //               </p>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
 
-        <p
-          style={{
-            color: "#8F8BA8",
-            textAlign: "center",
-            marginTop: "24px",
-            fontSize: "14px",
-          }}
-        >
-          Winners with correct predictions will receive rewards based on their accuracy.
-        </p>
-      </div>
-    )
-  }
+  //       <p
+  //         style={{
+  //           color: "#8F8BA8",
+  //           textAlign: "center",
+  //           marginTop: "24px",
+  //           fontSize: "14px",
+  //         }}
+  //       >
+  //         Winners with correct predictions will receive rewards based on their accuracy.
+  //       </p>
+  //     </div>
+  //   )
+  // }
 
   // If prediction is entered but not yet paid for, show payment screen
   if (predictionEntered && pendingPrediction) {
